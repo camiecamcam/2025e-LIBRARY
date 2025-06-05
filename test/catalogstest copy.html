@@ -1,0 +1,4940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>E-Library Catalogs</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+    }
+    
+    .sidebar {
+      height: 100vh;
+      background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 100%);
+      color: #fff;
+      padding: 1.5rem 1rem;
+      position: fixed;
+      width: 260px;
+      box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+    }
+    
+    .sidebar h4 {
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      padding: 0.5rem 1rem;
+      margin-bottom: 2rem;
+    }
+    
+    .sidebar a {
+      color: #e2e8f0;
+      display: block;
+      padding: 0.875rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      margin-bottom: 0.5rem;
+      transition: all 0.3s ease;
+      font-weight: 500;
+    }
+    
+    .sidebar a:hover, .sidebar .active {
+      background-color: rgba(255,255,255,0.1);
+      color: #fff;
+      transform: translateX(5px);
+    }
+    
+    .main {
+      margin-left: 280px;
+      padding: 2rem 2.5rem;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2.5rem;
+    }
+    
+    .header h2 {
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: -0.5px;
+    }
+
+    .table {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .table th {
+      background: #1e40af;
+      color: white;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.875rem;
+      padding: 1rem;
+    }
+
+    .table td {
+      padding: 1rem;
+      vertical-align: middle;
+    }
+
+    .table tbody tr:hover {
+      background-color: #f1f5f9;
+    }
+
+    .book-title {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .book-title span {
+      font-weight: 500;
+    }
+
+    .availability-badge {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 9999px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .physical {
+      background-color: #dcfce7;
+      color: #166534;
+    }
+
+    .digital {
+      background-color: #dbeafe;
+      color: #1e40af;
+    }
+
+    .borrowed {
+      background-color: #fee2e2;
+      color: #991b1b;
+    }
+
+    .reserved {
+      background-color: #fef3c7;
+      color: #92400e;
+    }
+
+    .rating-stars {
+      color: #fbbf24;
+      font-size: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    .rating-stars small {
+      color: #64748b;
+      font-size: 0.875rem;
+    }
+
+    .likes-dislikes {
+      display: flex;
+      gap: 1rem;
+      margin-top: 0.25rem;
+      font-size: 0.875rem;
+      color: #666;
+    }
+    
+    .likes, .dislikes {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .book-cover {
+      width: 45px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease;
+    }
+
+    .book-title:hover .book-cover {
+      transform: scale(1.1);
+    }
+
+    .table tbody tr {
+      transition: all 0.3s ease;
+      animation: slideIn 0.3s ease-out forwards;
+      opacity: 0;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(-20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .table tbody tr:nth-child(1) { animation-delay: 0.1s; }
+    .table tbody tr:nth-child(2) { animation-delay: 0.2s; }
+    .table tbody tr:nth-child(3) { animation-delay: 0.3s; }
+    .table tbody tr:nth-child(4) { animation-delay: 0.4s; }
+    .table tbody tr:nth-child(5) { animation-delay: 0.5s; }
+
+    .action-buttons {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .btn-action {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.15rem 0.3rem;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.875rem;
+      position: relative;
+    }
+
+    .btn-action:hover::after {
+      content: attr(title);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 0.25rem 0.5rem;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      z-index: 10;
+    }
+
+    .btn-view {
+      color: #3b82f6;
+    }
+
+    .btn-edit {
+      color: #0ea5e9;
+    }
+
+    .btn-archive {
+      color: #f59e0b;
+    }
+
+    .btn-view:hover { 
+      color: #2563eb;
+      background: #f0f9ff;
+    }
+
+    .btn-edit:hover {
+      color: #0284c7;
+      background: #f0f9ff;
+    }
+
+    .btn-archive:hover { 
+      color: #d97706;
+      background: #fff7ed;
+    }
+
+    .icon-sm {
+      width: 1rem;
+      height: 1rem;
+    }
+
+    /* Modal styles */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 1040;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-backdrop.show {
+      opacity: 1;
+    }
+
+    .book-modal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.7);
+      background: white;
+      padding: 0;
+      border-radius: 20px;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+      z-index: 1050;
+      max-width: 1400px; /* Increased from 1200px */
+      width: 95%;
+      max-height: 90vh;
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+    }
+
+    .book-modal.show {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .book-modal-content {
+      max-height: 90vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+      overscroll-behavior: contain;
+    }
+
+    /* Add this to prevent body scrolling when modal is open */
+    body.modal-open {
+      overflow: hidden;
+      padding-right: 15px; /* Prevent layout shift */
+    }
+
+    .book-details-grid {
+      display: grid;
+      grid-template-columns: 400px 1fr; /* Increased left column from 350px */
+      gap: 3rem; /* Increased gap from 2.5rem */
+      padding: 2.5rem; /* Increased padding from 2rem */
+      background: #ffffff;
+      max-height: calc(90vh - 70px);
+      overflow-y: auto;
+    }
+
+    .book-modal-header {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.75rem 2rem;
+      border-bottom: 1px solid #e5e7eb;
+      background: linear-gradient(to right, #f8fafc, #ffffff);
+    }
+
+    .modal-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0;
+      letter-spacing: -0.025em;
+    }
+
+    .book-modal-close {
+      background: #f1f5f9;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 50%;
+      width: 42px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #64748b;
+      transition: all 0.2s ease;
+    }
+
+    .book-modal-close:hover {
+      background: #e2e8f0;
+      color: #1e293b;
+      transform: rotate(90deg);
+    }
+
+    .book-cover-container {
+      position: relative;
+      width: 100%;
+    }
+
+    .book-cover-large {
+      width: 100%;
+      height: 500px; /* Increased height from 450px */
+      object-fit: cover;
+      border-radius: 12px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .book-cover-large:hover {
+      transform: scale(1.02);
+    }
+
+    .book-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: #f8fafc;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    }
+
+    .stat-item {
+      text-align: center;
+      padding: 0.5rem;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #0f172a;
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+      font-size: 0.875rem;
+      color: #64748b;
+      display: block;
+    }
+
+    .book-info {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2rem; /* Increased gap from 1.5rem */
+      align-content: start;
+      padding: 0 1.5rem; /* Increased padding from 1rem */
+    }
+
+    .book-info-item {
+      background: #f8fafc;
+      padding: 1.5rem; /* Increased padding from 1.25rem */
+      border-radius: 12px;
+      transition: all 0.2s ease;
+    }
+
+    .book-info-item:hover {
+      background: #f1f5f9;
+      transform: translateY(-2px);
+    }
+
+    .book-info-label {
+      font-size: 0.875rem;
+      color: #64748b;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .book-info-value {
+      font-size: 1rem;
+      color: #1e293b;
+      font-weight: 500;
+      display: block;
+    }
+
+    .book-info-item:last-child {
+      grid-column: 1 / -1;
+    }
+
+    .book-info-item:last-child .book-info-value {
+      max-height: 150px;
+      overflow-y: auto;
+      padding-right: 0.5rem;
+      line-height: 1.6;
+    }
+
+    .search-filter-container {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      position: relative;
+    }
+
+    #searchInput {
+      flex: 2;
+      width: 400px;
+      padding: 10px;
+      color: black;
+      font-size: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+    }
+
+    #searchInput:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+      outline: none;
+    }
+
+    .suggestions {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background-color: #f9f9f9;
+      border: 1px solid #ccc;
+      padding: 10px;
+      width: 400px;
+      display: none;
+      color: black;
+      z-index: 1050;
+      overflow-y: auto;
+      max-height: 350px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+
+    .suggestions ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .suggestions li {
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .suggestions li:hover {
+      background-color: #f1f5f9;
+    }
+
+    .suggestion-photo {
+      width: 30px;
+      height: 30px;
+      margin-right: 10px;
+      border-radius: 4px;
+    }
+
+    #searchInput:focus + .suggestions {
+      display: block;
+    }
+
+    #categoryFilter, #mediaTypeFilter {
+      width: 150px;
+    }
+
+    .form-select-sm, .form-control-sm {
+      font-size: 0.875rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      border: 1px solid #e2e8f0;
+    }
+
+    .form-select-sm:focus, .form-control-sm:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+      outline: none;
+    }
+
+    .header input {
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+      padding: 0.75rem 1.25rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      transition: all 0.3s ease;
+    }
+
+    .header input:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+    }
+
+    .btn-outline-primary {
+      color: #3b82f6;
+      border-color: #3b82f6;
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .btn-outline-primary:hover {
+      background-color: #3b82f6;
+      color: white;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1), 0 2px 4px -1px rgba(59, 130, 246, 0.06);
+    }
+
+    .form-control, .form-select {
+      border: 1px solid #e2e8f0;
+      border-radius: 0.5rem;
+      padding: 0.5rem;
+      font-size: 0.875rem;
+      transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+      outline: none;
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background-color: #3b82f6;
+      border-color: #3b82f6;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: #2563eb;
+      border-color: #2563eb;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background-color: #e2e8f0;
+      border-color: #e2e8f0;
+      color: #475569;
+    }
+
+    .btn-secondary:hover {
+      background-color: #cbd5e1;
+      border-color: #cbd5e1;
+      transform: translateY(-1px);
+    }
+
+    /* Toast notifications */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 2000;
+    }
+
+    .toast {
+      background: white;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 10px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 300px;
+      max-width: 400px;
+      animation: slideIn 0.3s ease-out forwards;
+      transition: all 0.3s ease;
+    }
+
+    .toast.success {
+      border-left: 4px solid #22c55e;
+    }
+
+    .toast.error {
+      border-left: 4px solid #ef4444;
+    }
+
+    .toast.warning {
+      border-left: 4px solid #f59e0b;
+    }
+
+    .toast-icon {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+    }
+
+    .toast-content {
+      flex-grow: 1;
+    }
+
+    .toast-title {
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: #1e293b;
+      margin-bottom: 4px;
+    }
+
+    .toast-message {
+      font-size: 0.8125rem;
+      color: #64748b;
+    }
+
+    .toast-close {
+      flex-shrink: 0;
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+    }
+
+    .toast-close:hover {
+      color: #475569;
+      background: #f1f5f9;
+    }
+
+    .toast.removing {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .manage-btn {
+      padding: 4px 8px;
+      font-size: 0.75rem;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .manage-btn:hover {
+      background: #f1f5f9;
+      color: #1e293b;
+      border-color: #cbd5e1;
+    }
+
+    .list-group-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 0.5rem;
+      border-radius: 0.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .list-group-item:hover {
+      background: #f8fafc;
+    }
+
+    .list-group-item .action-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .list-group-item .btn-action {
+      padding: 0.25rem;
+      background: none;
+      border: none;
+      border-radius: 0.25rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .list-group-item .btn-edit {
+      color: #0ea5e9;
+    }
+
+    .list-group-item .btn-delete {
+      color: #ef4444;
+    }
+
+    .list-group-item .btn-add-book {
+      color: #22c55e;
+    }
+
+    .list-group-item .btn-action:hover.btn-edit {
+      background: #e0f2fe;
+      color: #0369a1;
+    }
+
+    .list-group-item .btn-action:hover.btn-delete {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .list-group-item .btn-action:hover.btn-add-book {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .list-group-item .item-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .list-group-item .item-count {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      background: #e2e8f0;
+      color: #475569;
+      border-radius: 9999px;
+    }
+
+    .category-badge, .media-type-badge {
+      font-size: 0.875rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      background: #f1f5f9;
+      color: #475569;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .category-badge svg, .media-type-badge svg {
+      width: 16px;
+      height: 16px;
+      color: #64748b;
+    }
+
+    .add-new-form {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: #f8fafc;
+      border-radius: 0.5rem;
+      border: 1px solid #e2e8f0;
+    }
+
+    .add-new-form input {
+      flex: 1;
+    }
+
+    .add-new-form .btn-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .delete-btn {
+      padding: 4px 8px;
+      background: #fee2e2;
+      border: none;
+      border-radius: 4px;
+      color: #991b1b;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .delete-btn:hover {
+      background: #fecaca;
+    }
+
+    .book-id {
+      font-family: 'Courier New', monospace;
+      font-size: 0.875rem;
+      color: #64748b;
+      background: #f1f5f9;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    .required-field::after {
+      content: '*';
+      color: #ef4444;
+      margin-left: 4px;
+    }
+
+    .btn svg {
+      display: inline-block;
+      vertical-align: middle;
+      margin-top: -2px;
+    }
+
+    #addBookBtn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    #addBookBtn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1), 0 2px 4px -1px rgba(59, 130, 246, 0.06);
+    }
+
+    .like-dislike-bar {
+      display: flex;
+      width: 100%;
+      height: 10px;
+      background-color: #e0e0e0;
+      border-radius: 5px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .like-bar {
+      background-color: #22c55e;
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+
+    .dislike-bar {
+      background-color: #ef4444;
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+
+    /* Add these styles to your existing style section */
+    .form-select-lg {
+      height: auto;
+      padding: 0.5rem 1rem;
+      font-size: 14px;
+      line-height: 1.5;
+      border-radius: 0.5rem;
+      background-color: #fff;
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s ease;
+    }
+
+    .form-select-lg:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+      outline: none;
+    }
+
+    .form-select-lg option {
+      padding: 8px;
+      font-size: 14px;
+    }
+
+    /* Improve dropdown appearance */
+    select.form-select-lg {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 0.75rem center;
+      background-size: 1em;
+      padding-right: 2.5rem;
+    }
+
+    .book-info-item .d-flex {
+      width: 100%;
+    }
+
+    /* Adjust button size to match select height */
+    .book-info-item .btn {
+      height: 38px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 14px;
+    }
+
+    /* Improve dropdown options readability */
+    .form-select-lg option {
+      padding: 8px 12px;
+      min-height: 2rem;
+      display: block;
+    }
+
+    /* Add hover effect for options */
+    .form-select-lg option:hover {
+      background-color: #f8fafc;
+    }
+
+    /* Add these styles to your existing style section */
+    .pagination-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background: white;
+      border-top: 1px solid #e2e8f0;
+      margin-top: 1rem;
+    }
+
+    .pagination-info {
+      color: #64748b;
+      font-size: 0.875rem;
+    }
+
+    .pagination-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .page-numbers {
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .page-numbers button {
+      min-width: 32px;
+      height: 32px;
+      padding: 0 0.5rem;
+      border: 1px solid #e2e8f0;
+      background: white;
+      color: #64748b;
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .page-numbers button:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+      color: #1e293b;
+    }
+
+    .page-numbers button.active {
+      background: #3b82f6;
+      border-color: #3b82f6;
+      color: white;
+    }
+
+    .page-numbers button.active:hover {
+      background: #2563eb;
+    }
+
+    #prevPage, #nextPage {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+    }
+
+    #prevPage:disabled, #nextPage:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .page-numbers .ellipsis {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      color: #64748b;
+    }
+
+    /* Add these styles to your existing CSS */
+    .quiz-form {
+      padding: 20px;
+    }
+
+    .form-group label {
+      font-weight: 500;
+      margin-bottom: 5px;
+    }
+
+    #quizQuestion {
+      resize: vertical;
+  }
+
+    /* Add these styles to your existing CSS */
+    .search-results-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 0.375rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      z-index: 1050;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+
+    .search-result-item {
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .search-result-item:last-child {
+      border-bottom: none;
+    }
+
+    .search-result-item:hover {
+      background-color: #f8f9fa;
+    }
+
+    .search-result-item .book-title {
+      font-weight: 500;
+      color: #212529;
+      margin-bottom: 0.25rem;
+    }
+
+    .search-result-item .book-id {
+      font-size: 0.875rem;
+      color: #6c757d;
+    }
+
+    .selected-book-info {
+      padding: 0.75rem;
+      background-color: #f8f9fa;
+      border-radius: 0.375rem;
+      border: 1px solid #dee2e6;
+    }
+
+    .selected-book-info .book-title {
+      font-weight: 500;
+      color: #212529;
+      margin-bottom: 0.25rem;
+    }
+
+    .selected-book-info .book-id {
+      font-size: 0.875rem;
+      color: #6c757d;
+    }
+
+    .library-card {
+        display: none;
+        width: 800px;
+        height: 600px;
+        background: #fff;
+        border: 1px solid #ccc;
+        padding: 20px;
+        position: fixed;
+        top: -9999px;
+    }
+    .library-card-header {
+        text-align: center;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #4f46e5;
+        padding-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+    .library-card-logo {
+        width: 100px;
+        height: auto;
+    }
+    .library-card-title {
+        flex-grow: 1;
+        text-align: center;
+    }
+    .library-card-header h3 {
+        font-size: 24px;
+        color: #1f2937;
+        margin-bottom: 5px;
+    }
+    .library-card-header h4 {
+        font-size: 20px;
+        color: #4f46e5;
+        margin-bottom: 15px;
+    }
+    .book-info {
+        margin-bottom: 20px;
+        padding: 10px;
+        background: #f3f4f6;
+        border-radius: 5px;
+    }
+    .book-info p {
+        margin: 5px 0;
+        font-size: 16px;
+    }
+    .borrowing-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        table-layout: fixed;
+    }
+    .borrowing-table th, .borrowing-table td {
+        border: 1px solid #ccc;
+        padding: 12px;
+        font-size: 16px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .borrowing-table th {
+        background: #4f46e5;
+        color: white;
+        text-align: left;
+    }
+    .borrowing-table td {
+        height: 50px;
+    }
+
+    /* Date Range Filter Styles */
+    .date-filter {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: white;
+      padding: 0.75rem;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin-bottom: 1rem;
+    }
+
+    .date-filter label {
+      font-weight: 500;
+      color: #1e293b;
+    }
+
+    .date-filter input[type="date"] {
+      padding: 0.5rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-family: 'Inter', sans-serif;
+      color: #1e293b;
+    }
+
+    .date-filter button {
+      background: #1e40af;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .date-filter button:hover {
+      background: #1e3a8a;
+    }
+
+    .date-filter button.reset {
+      background: #ef4444;
+    }
+
+    .date-filter button.reset:hover {
+      background: #dc2626;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+ <img src="/image/sti logo 4 (2).png" alt="STI Logo" style="max-width: 200px; height: auto;">
+<h4>STI Vigan E-Library</h4>
+  <a href="test.html">Dashboard</a>
+  <a class="active" href="catalogstest.html">Catalogs</a>
+  <a  href="borrowing.html">Borrowing</a>
+  <a href="archivedtest.html">Archived</a>
+  <a href="faculty.html">Teachers</a>
+  <a href="studentstest.html">Students</a>
+    <a href="#" id="logoutSidebar">Logout</a>
+</div>
+
+<!-- Main Content -->
+<div class="main">
+  <div class="header">
+    <div class="d-flex align-items-center gap-3">
+      <h2>Book Catalog</h2>
+      <button id="addBookBtn" class="btn btn-primary">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-2">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Add Book
+      </button>
+      <button id="exportBtn" class="btn btn-success ms-2">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-2">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        Export to CSV
+      </button>
+      
+    </div>
+    <div class="search-filter-container">
+      <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Search books...">
+      <div class="suggestions">
+        <ul id="searchSuggestions"></ul>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <select id="categoryFilter" class="form-select form-select-sm ms-2">
+          <option value="">All Categories</option>
+        </select>
+        <button id="manageCategoriesBtn" class="manage-btn">
+          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+        </button>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <select id="mediaTypeFilter" class="form-select form-select-sm ms-2">
+          <option value="">All Media Types</option>
+        </select>
+        <button id="manageMediaTypesBtn" class="manage-btn">
+          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th style="min-width: 100px;">Book ID</th>
+          <th style="min-width: 300px;">Title</th>
+          <th>Author</th>
+          <th>Category</th>
+          <th>Upload Date</th>
+          <th>Ratings</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="booksTableBody">
+        <!-- Books will be dynamically added here -->
+      </tbody>
+    </table>
+    
+    <!-- Add pagination controls -->
+    <div class="pagination-container">
+      <div class="pagination-info">
+        Showing <span id="startIndex">0</span> to <span id="endIndex">0</span> of <span id="totalItems">0</span> books
+      </div>
+      <div class="pagination-controls">
+        <button id="prevPage" class="btn btn-outline-primary btn-sm">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          Previous
+        </button>
+        <div id="pageNumbers" class="page-numbers"></div>
+        <button id="nextPage" class="btn btn-outline-primary btn-sm">
+          Next
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Book Details Modal -->
+<div id="bookDetailsModal" class="book-modal">
+  <div class="book-modal-content">
+    <div class="book-modal-header">
+      <h3 class="modal-title">Book Details</h3>
+      <button class="book-modal-close">×</button>
+    </div>
+    <div class="book-details-grid">
+      <div class="book-cover-container">
+        <img class="book-cover-large" id="modalBookCover" src="" alt="Book cover">
+        <div class="book-stats">
+          <div class="stat-item">
+            <span class="stat-value" id="modalBookLikes">0</span>
+            <span class="stat-label">Likes</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value" id="modalBookDislikes">0</span>
+            <span class="stat-label">Dislikes</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value" id="modalBookViews">0</span>
+            <span class="stat-label">Views</span>
+          </div>
+        </div>
+      </div>
+      <div class="book-info">
+        <div class="book-info-item">
+          <span class="book-info-label">Rating</span>
+          <span class="book-info-value rating-stars" id="modalBookRating"></span>
+        </div>
+        <div class="book-info-item">
+          <span class="book-info-label">Title</span>
+          <span class="book-info-value" id="modalBookTitle"></span>
+        </div>
+        <div class="book-info-item">
+          <span class="book-info-label">Author(s)</span>
+          <span class="book-info-value" id="modalBookAuthor"></span>
+        </div>
+        <div class="book-info-item">
+          <span class="book-info-label">Category</span>
+          <span class="book-info-value" id="modalBookCategory"></span>
+        </div>
+        <div class="book-info-item">
+          <span class="book-info-label">ISBN</span>
+          <span class="book-info-value" id="modalBookIsbn"></span>
+        </div>
+        <div class="book-info-item">
+          <span class="book-info-label">Publisher</span>
+          <span class="book-info-value" id="modalBookPublisher"></span>
+        </div>
+        <div class="book-info-item">
+          <span class="book-info-label">Year</span>
+          <span class="book-info-value" id="modalBookYear"></span>
+        </div>
+        <div class="book-info-item">
+          <span class="book-info-label">Pages</span>
+          <span class="book-info-value" id="modalBookPages"></span>
+        </div>
+        <div class="book-info-item">
+          <span class="book-info-label">Media Type</span>
+          <span class="book-info-value" id="modalBookMediaType"></span>
+        </div>
+        <div class="book-info-item">
+          <span class="book-info-label">Description</span>
+          <span class="book-info-value" id="modalBookDescription"></span>
+        </div>
+        <!-- Add View Quizzes Button -->
+        <div class="book-info-item">
+          <span class="book-info-label">Quizzes</span>
+          <button id="viewQuizzesBtn" class="btn btn-primary btn-sm">
+            <i class="fas fa-question-circle"></i>
+            View Quizzes
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Book Modal -->
+<div id="editBookModal" class="book-modal">
+  <div class="book-modal-content">
+    <div class="book-modal-header">
+      <h3 class="modal-title">Edit Book</h3>
+      <button class="book-modal-close">×</button>
+    </div>
+    <div class="book-details-grid">
+      <div class="book-cover-container">
+        <img class="book-cover-large" id="editBookCover" src="" alt="Book cover">
+        <div class="mt-3">
+          <label class="book-info-label">Change Cover Image</label>
+          <input type="file" class="form-control form-control-sm" id="coverImageInput" accept="image/default-book.png">
+        </div>
+      </div>
+      <div class="book-info">
+        <div class="book-info-item">
+          <label class="book-info-label">Title</label>
+          <input type="text" class="form-control" id="editBookTitle">
+        </div>
+        <div class="book-info-item">
+          <label class="book-info-label">Author(s)</label>
+          <input type="text" class="form-control" id="editBookAuthor">
+        </div>
+        <div class="book-info-item">
+          <label class="book-info-label">Category</label>
+          <select class="form-select" id="editBookCategory">
+            <option value="">Select Category</option>
+          </select>
+        </div>
+        <div class="book-info-item">
+          <label class="book-info-label">ISBN</label>
+          <input type="text" class="form-control" id="editBookIsbn">
+        </div>
+        <div class="book-info-item">
+          <label class="book-info-label">Publisher</label>
+          <input type="text" class="form-control" id="editBookPublisher">
+        </div>
+        <div class="book-info-item">
+          <label class="book-info-label">Year</label>
+          <input type="number" class="form-control" id="editBookYear">
+        </div>
+        <div class="book-info-item">
+          <label class="book-info-label">Pages</label>
+          <input type="number" class="form-control" id="editBookPages">
+        </div>
+        <div class="book-info-item">
+          <label class="book-info-label">Media Type</label>
+          <select class="form-select" id="editBookMediaType">
+            <option value="">Select Media Type</option>
+          </select>
+        </div>
+        <div class="book-info-item">
+          <label class="book-info-label">Description</label>
+          <textarea class="form-control" id="editBookDescription" rows="4"></textarea>
+        </div>
+        <div class="book-info-item">
+          <label class="book-info-label">Status</label>
+          <select class="form-select" id="editBookStatus">
+            <option value="available">Available</option>
+            <option value="borrowed">Borrowed</option>
+            <option value="reserved">Reserved</option>
+          </select>
+        </div>
+        <div class="book-info-item text-end">
+          <button class="btn btn-secondary me-2" id="cancelEdit">Cancel</button>
+          <button class="btn btn-primary" id="saveBookChanges">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Category Management Modal -->
+<div id="categoryModal" class="book-modal">
+  <div class="book-modal-content">
+    <div class="book-modal-header">
+      <h3 class="modal-title">Manage Categories</h3>
+      <button class="book-modal-close">×</button>
+    </div>
+    <div class="p-4">
+      <div class="mb-4">
+        <div class="add-new-form">
+          <input type="text" id="newCategoryInput" class="form-control" placeholder="Enter new category name">
+          <div class="btn-group">
+            <button id="addCategoryBtn" class="btn btn-primary">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-2">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add Category
+            </button>
+            <button id="clearCategoryBtn" class="btn btn-secondary">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-2">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Clear
+            </button>
+          </div>
+        </div>
+        <div class="category-list">
+          <h5 class="mb-3">Existing Categories</h5>
+          <div id="categoriesList" class="list-group"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Media Type Management Modal -->
+<div id="mediaTypeModal" class="book-modal">
+  <div class="book-modal-content">
+    <div class="book-modal-header">
+      <h3 class="modal-title">Manage Media Types</h3>
+      <button class="book-modal-close">×</button>
+    </div>
+    <div class="p-4">
+      <div class="mb-4">
+        <div class="add-new-form">
+          <input type="text" id="newMediaTypeInput" class="form-control" placeholder="Enter new media type">
+          <div class="btn-group">
+            <button id="addMediaTypeBtn" class="btn btn-primary">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-2">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add Media Type
+            </button>
+            <button id="clearMediaTypeBtn" class="btn btn-secondary">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-2">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Clear
+            </button>
+          </div>
+        </div>
+        <div class="media-type-list">
+          <h5 class="mb-3">Existing Media Types</h5>
+          <div id="mediaTypesList" class="list-group"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Book Modal -->
+<div id="addBookModal" class="book-modal">
+  <div class="book-modal-content">
+    <div class="book-modal-header">
+      <h3 class="modal-title">Add New Book</h3>
+      <button class="book-modal-close">×</button>
+    </div>
+    <div class="book-details-grid">
+      <div class="book-cover-container">
+        <img class="book-cover-large" id="newBookCover" src="../image/default-book.png" alt="Book cover">
+        <div class="mt-3">
+          <label class="book-info-label">Upload Cover Image</label>
+          <input type="file" class="form-control form-control-sm" id="newCoverImageInput" accept="image/*">
+        </div>
+      </div>
+      <div class="book-info">
+        <div class="book-info-item">
+          <label class="book-info-label">Title*</label>
+          <input type="text" class="form-control" id="newBookTitle" required>
+        </div>
+        <div class="book-info-item">
+          <label class="book-info-label">Author(s)*</label>
+          <input type="text" class="form-control" id="newBookAuthor" required>
+        </div>
+        <div class="book-info-item">
+          <label class="book-info-label">Category*</label>
+          <div class="d-flex gap-2 align-items-start">
+            <select class="form-select form-select-lg" id="newBookCategory" required style="flex: 1; min-width: 200px; font-size: 14px; padding: 0.5rem;">
+              <option value="">Select Category</option>
+            </select>
+            <button class="btn btn-outline-primary" id="quickAddCategory" style="white-space: nowrap; padding: 0.5rem 1rem;">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add New
+            </button>
+          </div>
+        </div>
+        <div class="book-info-item">
+          <label class="book-info-label">ISBN</label>
+          <input type="text" class="form-control" id="newBookIsbn">
+        </div>
+        <div class="book-info-item">
+          <label class="book-info-label">Publisher</label>
+          <input type="text" class="form-control" id="newBookPublisher">
+        </div>
+        <div class="book-info-item">
+          <label class="book-info-label">Year</label>
+          <input type="number" class="form-control" id="newBookYear">
+        </div>
+        <div class="book-info-item">
+          <label class="book-info-label">Pages</label>
+          <input type="number" class="form-control" id="newBookPages">
+        </div>
+        <div class="book-info-item">
+          <label class="book-info-label">Media Type*</label>
+          <select class="form-select" id="newBookMediaType" required>
+            <option value="">Select Media Type</option>
+            <option value="Audio / Visuals">Audio / Visuals</option>
+            <option value="E-Books">E-Books</option>
+            <option value="E-Journal">E-Journal</option>
+            <option value="E-Thesis">E-Thesis</option>
+            <option value="Books">Books</option>
+            <option value="Journals">Journals</option>
+          </select>
+        </div>
+        <div class="book-info-item">
+          <label class="book-info-label" id="fileUploadLabel">Upload File</label>
+          <!-- PDF Upload Section -->
+          <div id="pdfUploadSection" style="display: none;">
+            <input type="file" class="form-control form-control-sm" id="newPdfFileInput" accept=".pdf">
+          </div>
+          <!-- Media Upload Section -->
+          <div id="mediaUploadSection" style="display: none;">
+            <div class="mb-3">
+              <select class="form-select form-select-sm" id="mediaFileType">
+                <option value="">Select File Type</option>
+                <option value="mp3">Audio File (MP3)</option>
+                <option value="mp4">Video File (MP4)</option>
+              </select>
+            </div>
+            <input type="file" class="form-control form-control-sm" id="mediaFileInput" accept=".mp3,.mp4">
+          </div>
+        </div>
+        <div class="book-info-item">
+          <label class="book-info-label">Description</label>
+          <textarea class="form-control" id="newBookDescription" rows="4"></textarea>
+        </div>
+        <div class="book-info-item">
+          <label class="book-info-label">Status*</label>
+          <select class="form-select" id="newBookStatus" required>
+            <option value="available">Available</option>
+            <option value="borrowed">Borrowed</option>
+            <option value="reserved">Reserved</option>
+          </select>
+        </div>
+        <div class="book-info-item" id="fileUploadContainer">
+          <!-- Remove duplicate PDF Upload Section -->
+        </div>
+        <div class="book-info-item">
+          <label class="book-info-label">Subject</label>
+          <input type="text" class="form-control" id="newBookSubject">
+        </div>
+        <div class="book-info-item">
+          <label class="book-info-label">Strands/Courses</label>
+          <input type="text" class="form-control" id="newBookStrandsCourses">
+        </div>
+        <div class="book-info-item">
+          <label class="book-info-label">Volume</label>
+          <input type="text" class="form-control" id="newBookVolume">
+        </div>
+        <div class="book-info-item text-end">
+          <small class="text-muted me-3">* Required fields</small>
+          <button class="btn btn-secondary me-2" id="cancelAddBook">Cancel</button>
+          <button class="btn btn-primary" id="saveNewBook">Add Book</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add the toast container HTML before the closing body tag -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- Firebase Scripts -->
+<script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-auth-compat.js"></script>
+
+<!-- Add this modal HTML before the closing body tag -->
+<!-- Archive Confirmation Modal -->
+<div id="archiveConfirmModal" class="book-modal">
+  <div class="book-modal-content">
+    <div class="book-modal-header">
+      <h3 class="modal-title">Archive Book</h3>
+      <button class="book-modal-close">×</button>
+    </div>
+    <div class="p-4">
+      <div class="text-center mb-4">
+        <svg width="48" height="48" fill="none" stroke="#f59e0b" viewBox="0 0 24 24" class="mb-3">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <h4 class="mb-3">Are you sure you want to archive this book?</h4>
+        <p class="text-muted mb-4">This action will move the book to the archive. The book will no longer appear in the main catalog.</p>
+      </div>
+      <div class="d-flex justify-content-center gap-3">
+        <button id="cancelArchive" class="btn btn-secondary">Cancel</button>
+        <button id="confirmArchive" class="btn btn-warning">Yes, Archive Book</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add these modals before the closing body tag -->
+<!-- Quick Add Category Modal -->
+<div id="quickAddCategoryModal" class="book-modal">
+  <div class="book-modal-content">
+    <div class="book-modal-header">
+      <h3 class="modal-title">Add New Category</h3>
+      <button class="book-modal-close">×</button>
+    </div>
+    <div class="p-4">
+      <div class="mb-4">
+        <label class="book-info-label mb-2">Category Name</label>
+        <input type="text" id="quickNewCategoryInput" class="form-control" placeholder="Enter category name">
+      </div>
+      <div class="d-flex justify-content-end gap-2">
+        <button class="btn btn-secondary" id="quickCancelCategory">Cancel</button>
+        <button class="btn btn-primary" id="quickConfirmCategory">Add Category</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Add Media Type Modal -->
+<div id="quickAddMediaTypeModal" class="book-modal">
+  <div class="book-modal-content">
+    <div class="book-modal-header">
+      <h3 class="modal-title">Add New Media Type</h3>
+      <button class="book-modal-close">×</button>
+    </div>
+    <div class="p-4">
+      <div class="mb-4">
+        <label class="book-info-label mb-2">Media Type Name</label>
+        <input type="text" id="quickNewMediaTypeInput" class="form-control" placeholder="Enter media type name">
+      </div>
+      <div class="d-flex justify-content-end gap-2">
+        <button class="btn btn-secondary" id="quickCancelMediaType">Cancel</button>
+        <button class="btn btn-primary" id="quickConfirmMediaType">Add Media Type</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Logout Modal -->
+<div id="logoutModal" class="book-modal">
+  <div class="book-modal-content">
+    <div class="book-modal-header">
+      <h3 class="modal-title">Logout</h3>
+      <button class="book-modal-close">×</button>
+    </div>
+    <div class="p-4">
+      <p>Are you sure you want to logout?</p>
+      <div class="d-flex justify-content-end gap-3">
+        <button id="cancelLogout" class="btn btn-secondary">Cancel</button>
+        <button id="confirmLogout" class="btn btn-danger">Logout</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quiz Modal -->
+<div id="quizModal" class="modal fade" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Create Quiz</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="quizForm">
+          <div class="mb-3">
+            <label for="bookSearch" class="form-label">Search Book</label>
+            <div class="position-relative">
+              <input type="text" class="form-control" id="bookSearch" 
+                placeholder="Search by book title or ID..." required>
+              <div id="bookSearchResults" class="search-results-dropdown d-none">
+                <!-- Search results will be populated here -->
+              </div>
+              <div id="selectedBookInfo" class="selected-book-info mt-2 d-none">
+                <!-- Selected book info will be shown here -->
+              </div>
+              <input type="hidden" id="selectedBookId">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="subjectName" class="form-label">Subject</label>
+            <input type="text" class="form-control" id="subjectName" readonly>
+            <input type="hidden" id="subjectId">
+          </div>
+          <div class="mb-3">
+            <label for="quizQuestion" class="form-label">Question</label>
+            <textarea class="form-control" id="quizQuestion" rows="3" required 
+              placeholder="Example: When Starting a Program. What word you always see in the System.out.printIn?"></textarea>
+          </div>
+          
+          <div id="optionsContainer">
+            <!-- Fixed 4 options -->
+            <div class="mb-3 option-group" data-option-number="1">
+              <div class="d-flex align-items-center gap-2">
+                <div class="flex-grow-1">
+                  <label class="form-label">Option 1</label>
+                  <input type="text" class="form-control option-input" required
+                    placeholder="Enter option 1">
+                </div>
+              </div>
+            </div>
+            <div class="mb-3 option-group" data-option-number="2">
+              <div class="d-flex align-items-center gap-2">
+                <div class="flex-grow-1">
+                  <label class="form-label">Option 2</label>
+                  <input type="text" class="form-control option-input" required
+                    placeholder="Enter option 2">
+                </div>
+              </div>
+            </div>
+            <div class="mb-3 option-group" data-option-number="3">
+              <div class="d-flex align-items-center gap-2">
+                <div class="flex-grow-1">
+                  <label class="form-label">Option 3</label>
+                  <input type="text" class="form-control option-input" required
+                    placeholder="Enter option 3">
+                </div>
+              </div>
+            </div>
+            <div class="mb-3 option-group" data-option-number="4">
+              <div class="d-flex align-items-center gap-2">
+                <div class="flex-grow-1">
+                  <label class="form-label">Option 4</label>
+                  <input type="text" class="form-control option-input" required
+                    placeholder="Enter option 4">
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="correctAnswer" class="form-label">Correct Answer</label>
+            <select class="form-select" id="correctAnswer" required>
+              <option value="">Select Correct Answer</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="saveQuiz">Save Quiz</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add this new modal for quizzes -->
+<div id="quizzesModal" class="book-modal">
+  <div class="book-modal-content">
+    <div class="book-modal-header">
+      <h3 class="modal-title">Book Quizzes</h3>
+      <button class="book-modal-close">×</button>
+    </div>
+    <div class="p-4">
+      <div id="quizzesList" class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Question</th>
+              <th>Correct Answer</th>
+              <th>Options</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="quizzesTableBody">
+            <!-- Quizzes will be dynamically added here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Edit Quiz Modal -->
+<div id="editQuizModal" class="book-modal">
+  <div class="book-modal-content">
+    <div class="book-modal-header">
+      <h3 class="modal-title">Edit Quiz</h3>
+      <button class="book-modal-close" onclick="closeModal('editQuizModal')">×</button>
+    </div>
+    <div class="p-4">
+      <form id="editQuizForm">
+        <input type="hidden" id="editQuizId">
+        <div class="mb-3">
+          <label for="editQuestion" class="form-label">Question</label>
+          <textarea class="form-control" id="editQuestion" rows="3" required></textarea>
+        </div>
+        <div id="editOptionsContainer">
+          <div class="mb-3">
+            <label class="form-label">Option 1</label>
+            <input type="text" class="form-control edit-option-input" id="editOption1" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Option 2</label>
+            <input type="text" class="form-control edit-option-input" id="editOption2" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Option 3</label>
+            <input type="text" class="form-control edit-option-input" id="editOption3" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Option 4</label>
+            <input type="text" class="form-control edit-option-input" id="editOption4" required>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label for="editCorrectAnswer" class="form-label">Correct Answer</label>
+          <select class="form-select" id="editCorrectAnswer" required>
+            <option value="">Select Correct Answer</option>
+          </select>
+        </div>
+        <div class="d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('editQuizModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Modal -->
+<div id="loadingModal" class="modal">
+  <div class="modal-content">
+    <h2 class="text-xl font-semibold mb-4">Processing...</h2>
+    <div class="mb-4">
+      <p id="uploadProgress">Please wait while we process your request...</p>
+    </div>
+    <div class="flex justify-end gap-2">
+      <button class="btn btn-secondary" id="cancelUpload">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- CSV Upload Modal -->
+<div id="csvModal" class="modal">
+  <div class="modal-content">
+    <h2 class="text-xl font-semibold mb-4">Upload CSV File</h2>
+    <div class="mb-4">
+      <h3 class="font-bold mb-2">CSV Format Instructions:</h3>
+      <ul class="list-disc ml-4 space-y-1">
+        <li>Make Space on First ROW</li>
+        <li>Book ID on First COLUMN</li>
+        <li>Title on Second COLUMN</li>
+        <li>Authors on Third COLUMN</li>
+        <li>Category on Fourth COLUMN</li>
+        <li>Media Type on Fifth COLUMN</li>
+        <li>ISBN on Sixth COLUMN</li>
+        <li>Publisher on Seventh COLUMN</li>
+        <li>Subject on Eighth COLUMN</li>
+        <li>Strands/Courses on Ninth COLUMN</li>
+        <li>Volume on Tenth COLUMN</li>
+        <li>Year on Eleventh COLUMN</li>
+        <li>Pages on Twelfth COLUMN</li>
+        <li>Description on Thirteenth COLUMN</li>
+      </ul>
+    </div>
+    <div class="flex justify-end gap-2">
+      <button class="btn btn-secondary" onclick="closeModal('csvModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="downloadTemplate()">Download Template</button>
+      <input type="file" id="csvFile" accept=".csv" style="display: none;">
+      <button class="btn btn-primary" onclick="document.getElementById('csvFile').click()">Select File</button>
+    </div>
+  </div>
+</div>
+
+<div id="libraryCardTemplate" class="library-card">
+    <div class="library-card-header">
+        <img src="/image/sti logo 4 (2).png" alt="STI College Vigan Logo" class="library-card-logo">
+        <div class="library-card-title">
+            <h3>STI COLLEGE VIGAN</h3>
+            <h4>LIBRARY BORROWING RECORD</h4>
+        </div>
+        <div style="width: 100px;"></div> <!-- Spacer for balance -->
+    </div>
+    <div class="book-info">
+        <p><strong>Book ID:</strong> <span id="cardBookId"></span></p>
+        <p><strong>Book Title:</strong> <span id="cardBookTitle"></span></p>
+        <p><strong>Author:</strong> <span id="cardAuthor"></span></p>
+        <p><strong>ISBN:</strong> <span id="cardISBN"></span></p>
+        <p><strong>Pages:</strong> <span id="cardPages"></span></p>
+    </div>
+    <table class="borrowing-table">
+        <thead>
+            <tr>
+                <th style="width: 20%;">Date Loaned</th>
+                <th style="width: 30%;">Borrower's Name</th>
+                <th style="width: 30%;">Program</th>
+                <th style="width: 20%;">Date Returned</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td></td><td></td><td></td><td></td></tr>
+            <tr><td></td><td></td><td></td><td></td></tr>
+            <tr><td></td><td></td><td></td><td></td></tr>
+            <tr><td></td><td></td><td></td><td></td></tr>
+            <tr><td></td><td></td><td></td><td></td></tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+// Initialize Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyCbWyVqhZdWL5tGF5Y2YXRpY5PJLC0ee6M",
+  authDomain: "elibrarylogin-3d7e6.firebaseapp.com",
+  projectId: "elibrarylogin-3d7e6",
+  storageBucket: "elibrarylogin-3d7e6.appspot.com",
+  messagingSenderId: "872832392728",
+  appId: "1:872832392728:web:10489984713141407ded6d"
+};
+
+// Initialize Firebase with error checking
+try {
+  firebase.initializeApp(firebaseConfig);
+  console.log('Firebase initialized successfully');
+} catch (error) {
+  console.error('Error initializing Firebase:', error);
+  alert('Error initializing Firebase. Please check console for details.');
+}
+
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+// Verify Firestore is accessible
+db.collection('books').limit(1).get()
+  .then(() => {
+    console.log('Firestore connection verified');
+  })
+  .catch(error => {
+    console.error('Error connecting to Firestore:', error);
+    alert('Error connecting to database. Please check console for details.');
+  });
+
+// Check authentication
+auth.onAuthStateChanged((user) => {
+  if (!user) {
+    console.log('User not authenticated, redirecting to login');
+    window.location.href = '/index.html';
+  } else {
+    console.log('User authenticated:', user.email);
+  }
+});
+
+function calculateRating(likes, dislikes) {
+  const likesCount = parseInt(likes || 0);
+  const dislikesCount = parseInt(dislikes || 0);
+  const total = likesCount + dislikesCount;
+  
+  if (total === 0) return 0;
+  const rating = (likesCount / total) * 5;
+  return Math.min(5, Math.max(0, Math.round(rating * 2) / 2));
+}
+
+function getStarDisplay(rating, likes, dislikes) {
+  const validRating = Number.isNaN(rating) ? 0 : rating;
+  const fullStars = Math.floor(validRating);
+  const hasHalfStar = (validRating % 1) >= 0.5;
+  const emptyStars = Math.max(0, 5 - fullStars - (hasHalfStar ? 1 : 0));
+  
+  const totalVotes = likes + dislikes;
+  const likePercentage = totalVotes > 0 ? (likes / totalVotes) * 100 : 0;
+  const dislikePercentage = totalVotes > 0 ? (dislikes / totalVotes) * 100 : 0;
+  
+  return `
+    <div>
+      ${'★'.repeat(fullStars)}${hasHalfStar ? '½' : ''}${'☆'.repeat(emptyStars)}
+      <small>(${validRating.toFixed(1)} / 5)</small>
+    </div>
+    <div class="like-dislike-bar">
+      <div class="like-bar" style="width: ${likePercentage}%"></div>
+      <div class="dislike-bar" style="width: ${dislikePercentage}%"></div>
+    </div>
+    <div class="likes-dislikes">
+      <span class="likes">👍 ${likes}</span>
+      <span class="dislikes">👎 ${dislikes}</span>
+    </div>
+  `;
+}
+
+function getAvailabilityInfo(book) {
+  if (book.status === 'borrowed') {
+    return {
+      class: 'borrowed',
+      text: 'Borrowed',
+      icon: '📚'
+    };
+  }
+  if (book.status === 'reserved') {
+    return {
+      class: 'reserved',
+      text: 'Reserved',
+      icon: '🔖'
+    };
+  }
+  
+  // Handle different electronic media types
+  if (book.mediaType === 'Audio / Visuals' || book.mediaUrl) {
+    return {
+      class: 'digital',
+      text: 'E-Book Available',
+      icon: '💻'
+    };
+  }
+  
+  if (book.pdfLink) {
+    switch (book.mediaType) {
+      case 'E-Journal':
+        return {
+          class: 'digital',
+          text: 'E-Journal Available',
+          icon: '📰'
+        };
+      case 'E-Thesis':
+        return {
+          class: 'digital',
+          text: 'E-Thesis Available',
+          icon: '🎓'
+        };
+      case 'E-Books':
+        return {
+          class: 'digital',
+          text: 'E-Book Available',
+          icon: '📱'
+        };
+      default:
+        return {
+          class: 'digital',
+          text: 'Digital Copy Available',
+          icon: '💻'
+        };
+    }
+  }
+  
+  // For electronic media types without PDF
+  if (book.mediaType === 'E-Books' || 
+      book.mediaType === 'E-Journal' || 
+      book.mediaType === 'E-Thesis') {
+    return {
+      class: 'digital',
+      text: `${book.mediaType} (No PDF)`,
+      icon: '💻'
+    };
+  }
+  
+  return {
+    class: 'physical',
+    text: 'Available in Library',
+    icon: '📖'
+  };
+}
+
+// Add this function at the beginning of your script section
+function showModal(modalElement) {
+  // Remove any existing backdrops and hide other modals
+  document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+  document.querySelectorAll('.book-modal.show').forEach(modal => {
+    if (modal !== modalElement) {
+      modal.classList.remove('show');
+      modal.style.display = 'none';
+    }
+  });
+  
+  // Create new backdrop
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  document.body.appendChild(backdrop);
+
+  // Show modal with animation
+  requestAnimationFrame(() => {
+    modalElement.style.display = 'block';
+    document.body.classList.add('modal-open');
+    requestAnimationFrame(() => {
+      modalElement.classList.add('show');
+      backdrop.classList.add('show');
+    });
+  });
+
+  // Close modal function
+  const closeModal = () => {
+    modalElement.classList.remove('show');
+    backdrop.classList.remove('show');
+    document.body.classList.remove('modal-open');
+    setTimeout(() => {
+      modalElement.style.display = 'none';
+      backdrop.remove();
+    }, 300);
+  };
+
+  // Add event listeners
+  const closeButton = modalElement.querySelector('.book-modal-close');
+  if (closeButton) {
+    closeButton.onclick = closeModal;
+  }
+  backdrop.onclick = closeModal;
+
+  // Add escape key handler
+  const escapeListener = (e) => {
+    if (e.key === 'Escape') {
+      closeModal();
+      document.removeEventListener('keydown', escapeListener);
+    }
+  };
+  document.addEventListener('keydown', escapeListener);
+
+  return closeModal;
+}
+
+// Update showBookDetails function
+function showBookDetails(book) {
+  const modal = document.getElementById('bookDetailsModal');
+  if (!modal) return;
+  
+  // Calculate rating for modal display
+  const likes = parseInt(book.like || 0);
+  const dislikes = parseInt(book.dislike || 0);
+  const rating = calculateRating(likes, dislikes);
+  const starDisplay = getStarDisplay(rating, likes, dislikes);
+  
+  // Update modal content with proper null checks
+  const updateElement = (id, value, defaultValue = 'N/A') => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.textContent = value || defaultValue;
+    }
+  };
+
+  // Update image with fallback
+  const coverImage = document.getElementById('modalBookCover');
+  if (coverImage) {
+    coverImage.src = book.img || '../image/default-book.png';
+    coverImage.onerror = function() {
+      handleImageError(this);
+    };
+    coverImage.alt = book.title || 'Book cover';
+  }
+
+  // Update all book details
+  updateElement('modalBookTitle', book.title, 'Untitled');
+  updateElement('modalBookAuthor', book.authors, 'Unknown');
+  updateElement('modalBookCategory', book.category, 'Uncategorized');
+  updateElement('modalBookIsbn', book.isbn);
+  updateElement('modalBookPublisher', book.publisher);
+  updateElement('modalBookYear', book.year);
+  updateElement('modalBookPages', book.pages);
+  updateElement('modalBookMediaType', book.mediaType);
+  updateElement('modalBookDescription', book.fullDescription || book.description, 'No description available');
+  
+  // Update stats
+  updateElement('modalBookLikes', likes, '0');
+  updateElement('modalBookDislikes', dislikes, '0');
+  updateElement('modalBookViews', book.viewCount, '0');
+  
+  // Update rating display
+  const ratingElement = document.getElementById('modalBookRating');
+  if (ratingElement) {
+    ratingElement.innerHTML = starDisplay;
+  }
+
+  // Add PDF link if available
+  const pdfLinkContainer = document.createElement('div');
+  pdfLinkContainer.className = 'book-info-item';
+  if (book.pdfLink) {
+    pdfLinkContainer.innerHTML = `
+      <span class="book-info-label">PDF Document</span>
+      <div class="d-flex align-items-center gap-2">
+        <a href="${book.pdfLink}" target="_blank" class="btn btn-primary btn-sm">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Download PDF
+        </a>
+      </div>
+    `;
+  } else {
+    pdfLinkContainer.innerHTML = `
+      <span class="book-info-label">PDF Document</span>
+      <span class="book-info-value text-muted">No PDF available</span>
+    `;
+  }
+  
+  // Add the PDF link container to the modal
+  const bookInfo = modal.querySelector('.book-info');
+  if (bookInfo) {
+    // Remove any existing PDF link container first
+    const existingPdfContainer = bookInfo.querySelector('.book-info-item:last-child');
+    if (existingPdfContainer) {
+      existingPdfContainer.remove();
+    }
+    bookInfo.appendChild(pdfLinkContainer);
+  }
+
+  // Show modal with proper close functionality
+  const closeModal = showModal(modal);
+
+  // Add close button handler
+  const closeButton = modal.querySelector('.book-modal-close');
+  if (closeButton) {
+    closeButton.onclick = closeModal;
+  }
+
+  // Add click outside handler
+  const backdrop = document.querySelector('.modal-backdrop');
+  if (backdrop) {
+    backdrop.onclick = closeModal;
+  }
+
+  // Add escape key handler
+  const escapeListener = (e) => {
+    if (e.key === 'Escape') {
+      closeModal();
+      document.removeEventListener('keydown', escapeListener);
+    }
+  };
+  document.addEventListener('keydown', escapeListener);
+
+  // Store the current book ID for quiz fetching
+  currentBookId = book.id;
+
+  // Add View Quizzes button click handler
+  const viewQuizzesBtn = document.getElementById('viewQuizzesBtn');
+  if (viewQuizzesBtn) {
+    viewQuizzesBtn.onclick = () => showQuizzes(book.id);
+  }
+}
+
+// Update editBook function
+function editBook(bookId) {
+  const modal = document.getElementById('editBookModal');
+  if (!modal) return;
+
+  // Fetch the book data
+  db.collection('books').doc(bookId).get().then((doc) => {
+    if (doc.exists) {
+      const book = { ...doc.data(), id: doc.id };
+      
+      // Populate the form fields
+      document.getElementById('editBookCover').src = book.img || '../image/default-book.png';
+      document.getElementById('editBookTitle').value = book.title || '';
+      document.getElementById('editBookAuthor').value = book.authors || '';
+      document.getElementById('editBookCategory').value = book.category || '';
+      document.getElementById('editBookIsbn').value = book.isbn || '';
+      document.getElementById('editBookPublisher').value = book.publisher || '';
+      document.getElementById('editBookYear').value = book.year || '';
+      document.getElementById('editBookPages').value = book.pages || '';
+      document.getElementById('editBookMediaType').value = book.mediaType || '';
+      document.getElementById('editBookDescription').value = book.fullDescription || book.description || '';
+      document.getElementById('editBookStatus').value = book.status || 'available';
+
+      // Show modal
+      const closeModal = showModal(modal);
+
+      // Handle image upload
+      const coverImageInput = document.getElementById('coverImageInput');
+      coverImageInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          try {
+            showToast('warning', 'Uploading Image', 'Please wait while we upload the new cover image...', 2000);
+            const storageRef = firebase.storage().ref();
+            const fileRef = storageRef.child(`bookCovers/${book.id}_${file.name}`);
+            await fileRef.put(file);
+            const imageUrl = await fileRef.getDownloadURL();
+            document.getElementById('editBookCover').src = imageUrl;
+            showToast('success', 'Image Uploaded', 'Book cover has been successfully updated.');
+          } catch (error) {
+            console.error('Error uploading image:', error);
+            showToast('error', 'Upload Failed', 'Failed to upload image. Please try again.');
+          }
+        }
+      });
+
+      // Handle form submission
+      const saveButton = document.getElementById('saveBookChanges');
+      saveButton.onclick = async () => {
+        try {
+          const updatedBook = {
+            title: document.getElementById('editBookTitle').value,
+            authors: document.getElementById('editBookAuthor').value,
+            category: document.getElementById('editBookCategory').value,
+            isbn: document.getElementById('editBookIsbn').value,
+            publisher: document.getElementById('editBookPublisher').value,
+            year: document.getElementById('editBookYear').value,
+            pages: document.getElementById('editBookPages').value,
+            mediaType: document.getElementById('editBookMediaType').value,
+            description: document.getElementById('editBookDescription').value,
+            status: document.getElementById('editBookStatus').value,
+            img: document.getElementById('editBookCover').src,
+            updatedAt: new Date()
+          };
+
+          await db.collection('books').doc(book.id).update(updatedBook);
+          closeModal();
+          showToast('success', 'Book Updated', 'The book details have been successfully updated.');
+          fetchBooks(); // Refresh the book list
+        } catch (error) {
+          console.error('Error updating book:', error);
+          showToast('error', 'Update Failed', 'Failed to update book details. Please try again.');
+        }
+      };
+
+      // Add cancel button handler
+      const cancelButton = document.getElementById('cancelEdit');
+      if (cancelButton) {
+        cancelButton.onclick = closeModal;
+      }
+    }
+  }).catch((error) => {
+    console.error('Error fetching book:', error);
+    showToast('error', 'Load Failed', 'Failed to load book details. Please try again.');
+  });
+}
+
+// Update the archiveBook function
+function archiveBook(bookId) {
+  const modal = document.getElementById('archiveConfirmModal');
+  const closeModal = showModal(modal);
+
+  // Store the closeModal function for later use
+  modal.dataset.closeModal = 'true';
+
+  // Add button handlers
+  const confirmBtn = document.getElementById('confirmArchive');
+  const cancelBtn = document.getElementById('cancelArchive');
+  const closeBtn = modal.querySelector('.book-modal-close');
+
+  const cleanup = () => {
+    // Remove event listeners
+    confirmBtn.removeEventListener('click', handleConfirm);
+    cancelBtn.removeEventListener('click', handleCancel);
+    closeBtn.removeEventListener('click', handleCancel);
+    // Close the modal
+    closeModal();
+  };
+
+  const handleConfirm = async () => {
+    try {
+      // Show loading toast
+      showToast('warning', 'Archiving Book', 'Moving book to archive collection...', 2000);
+      
+      // Get the book data
+      const doc = await db.collection('books').doc(bookId).get();
+      
+      if (doc.exists) {
+        const bookData = doc.data();
+        console.log('Book to archive:', bookData); // Log book data for verification
+        
+        // Prepare archive data with additional fields
+        const archiveData = {
+          ...bookData,
+          archivedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          originalId: bookId,
+          archiveStatus: 'archived',
+          archiveNote: 'Book moved to archive from main catalog'
+        };
+        
+        // Add to archive collection first
+        const archiveRef = await db.collection('archive').add(archiveData);
+        console.log('Book archived with ID:', archiveRef.id); // Log archive ID
+        
+        // Only delete from books collection after successful archive
+        await db.collection('books').doc(bookId).delete();
+        console.log('Book deleted from main catalog:', bookId); // Log deletion
+        
+        cleanup();
+        showToast('success', 'Book Archived', 'The book has been successfully moved to the archive.');
+        fetchBooks(); // Refresh the book list
+      } else {
+        throw new Error('Book not found');
+      }
+    } catch (error) {
+      console.error('Error archiving book:', error);
+      showToast('error', 'Archive Failed', `Failed to archive the book: ${error.message}`);
+      cleanup();
+    }
+  };
+
+  const handleCancel = () => {
+    cleanup();
+  };
+
+  // Add event listeners
+  confirmBtn.addEventListener('click', handleConfirm);
+  cancelBtn.addEventListener('click', handleCancel);
+  closeBtn.addEventListener('click', handleCancel);
+}
+
+// Update the fetchBooks function with better date handling
+function fetchBooks() {
+  console.log('Starting fetchBooks function');
+  const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+  const categoryFilter = document.getElementById('categoryFilter');
+  const mediaTypeFilter = document.getElementById('mediaTypeFilter');
+
+  console.log('Filters:', {
+    searchTerm,
+    category: categoryFilter ? categoryFilter.value : 'none',
+    mediaType: mediaTypeFilter ? mediaTypeFilter.value : 'none'
+  });
+
+  // Store the selected values
+  const selectedCategory = categoryFilter ? categoryFilter.value : '';
+  const selectedMediaType = mediaTypeFilter ? mediaTypeFilter.value : '';
+
+  db.collection('books').orderBy('bookId', 'desc').get().then((snapshot) => {
+    console.log('Got Firestore snapshot, total documents:', snapshot.size);
+    
+    const booksTableBody = document.getElementById('booksTableBody');
+    if (!booksTableBody) {
+      console.error('Could not find booksTableBody element');
+      return;
+    }
+    
+    booksTableBody.innerHTML = '';
+    let displayedBooks = 0;
+
+    snapshot.docs.forEach((doc, index) => {
+      const book = { ...doc.data(), id: doc.id };
+      console.log('Processing book:', book.title, book.id);
+      
+      // Enhanced search across all relevant fields
+      const matchesSearch = searchTerm === '' || 
+        Object.entries(book).some(([key, value]) => {
+          // Skip certain fields that shouldn't be searched
+          if (['id', 'img', 'pdfUrl', 'mediaUrl', 'createdAt', 'updatedAt'].includes(key)) {
+            return false;
+          }
+          // Convert value to string and search
+          return String(value).toLowerCase().includes(searchTerm);
+        });
+      
+      const matchesCategory = selectedCategory === '' || book.category === selectedCategory;
+      const matchesMediaType = selectedMediaType === '' || book.mediaType === selectedMediaType;
+
+      console.log('Filter matches for', book.title, {
+        matchesSearch,
+        matchesCategory,
+        matchesMediaType
+      });
+
+      if (matchesSearch && matchesCategory && matchesMediaType) {
+        displayedBooks++;
+        const likes = parseInt(book.like || 0);
+        const dislikes = parseInt(book.dislike || 0);
+        const rating = calculateRating(likes, dislikes);
+        const starDisplay = getStarDisplay(rating, likes, dislikes);
+        const availability = getAvailabilityInfo(book);
+        
+        // Improved date handling
+        let uploadDate = "N/A";
+        if (book.uploadedAt) {
+          try {
+            // Handle Firestore Timestamp
+            if (book.uploadedAt.toDate && typeof book.uploadedAt.toDate === 'function') {
+              uploadDate = new Date(book.uploadedAt.toDate()).toLocaleDateString();
+            }
+            // Handle JavaScript Date object or timestamp
+            else if (book.uploadedAt instanceof Date || typeof book.uploadedAt === 'number') {
+              uploadDate = new Date(book.uploadedAt).toLocaleDateString();
+            }
+            // Handle ISO string
+            else if (typeof book.uploadedAt === 'string') {
+              uploadDate = new Date(book.uploadedAt).toLocaleDateString();
+            }
+          } catch (error) {
+            console.warn('Error formatting date for book:', book.id, error);
+            uploadDate = "Invalid Date";
+          }
+        }
+
+        const row = document.createElement('tr');
+        row.style.animationDelay = `${index * 0.1}s`;
+        row.innerHTML = `
+          <td>
+            <span class="book-id">${book.bookId || book.id}</span>
+          </td>
+          <td>
+            <div class="book-title">
+              <img src="${book.img || '../image/default-book.png'}" 
+                   alt="${book.title}" 
+                   class="book-cover" 
+                   onerror="handleImageError(this)">
+              <div class="d-flex flex-column">
+                <span>${book.title || 'Untitled'}</span>
+                <span class="availability-badge ${availability.class}">
+                  ${availability.icon} ${availability.text}
+                </span>
+              </div>
+            </div>
+          </td>
+          <td>${book.authors || 'Unknown'}</td>
+          <td>${book.category || 'Uncategorized'}</td>
+          <td>${uploadDate}</td>
+          <td>
+            <div class="rating-stars" title="${likes} likes, ${dislikes} dislikes">
+              ${starDisplay}
+            </div>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button class="btn-action btn-view" title="View Details">
+<svg style="width: 32px; height: 32px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </button>
+              <button class="btn-action btn-edit" title="Edit Book">
+<svg style="width: 32px; height: 32px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+              <button class="btn-action btn-archive" title="Archive Book">
+<svg style="width: 32px; height: 32px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                </svg>
+              </button>
+              <button class="btn-action btn-library-card" title="Generate Library Card">
+<svg style="width: 32px; height: 32px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z" />
+                </svg>
+              </button>
+            </div>
+          </td>
+        `;
+
+        // Add event listeners to buttons
+        const viewBtn = row.querySelector('.btn-view');
+        const editBtn = row.querySelector('.btn-edit');
+        const archiveBtn = row.querySelector('.btn-archive');
+        const libraryCardBtn = row.querySelector('.btn-library-card');
+
+        viewBtn.addEventListener('click', () => showBookDetails(book));
+        editBtn.addEventListener('click', () => editBook(book.id));
+        archiveBtn.addEventListener('click', () => archiveBook(book.id));
+        libraryCardBtn.addEventListener('click', () => generateLibraryCard(book));
+
+        booksTableBody.appendChild(row);
+      }
+    });
+
+    console.log('Total books displayed:', displayedBooks);
+    
+    // Update pagination info
+    const startIndex = document.getElementById('startIndex');
+    const endIndex = document.getElementById('endIndex');
+    const totalItems = document.getElementById('totalItems');
+    
+    if (startIndex && endIndex && totalItems) {
+      if (displayedBooks > 0) {
+        startIndex.textContent = '1';
+        endIndex.textContent = displayedBooks;
+        totalItems.textContent = displayedBooks;
+      } else {
+        startIndex.textContent = '0';
+        endIndex.textContent = '0';
+        totalItems.textContent = '0';
+      }
+    }
+
+  }).catch(error => {
+    console.error('Error fetching books:', error);
+    showToast('error', 'Load Failed', 'Failed to load books. Please refresh the page.');
+  });
+}
+
+// Add event listeners
+document.addEventListener('DOMContentLoaded', () => {
+  const searchInput = document.getElementById('searchInput');
+  const categoryFilter = document.getElementById('categoryFilter');
+  const mediaTypeFilter = document.getElementById('mediaTypeFilter');
+
+  if (searchInput) {
+    searchInput.addEventListener('input', fetchBooks);
+  }
+  if (categoryFilter) {
+    categoryFilter.addEventListener('change', (e) => {
+      e.preventDefault(); // Prevent default to maintain selection
+      fetchBooks();
+    });
+  }
+  if (mediaTypeFilter) {
+    mediaTypeFilter.addEventListener('change', fetchBooks);
+  }
+
+  // Initial load
+  fetchBooks();
+});
+
+// Add this function at the beginning of your script section
+function showToast(type, title, message, duration = 5000) {
+  const container = document.getElementById('toastContainer');
+  
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  
+  let iconSvg = '';
+  switch(type) {
+    case 'success':
+      iconSvg = `<svg class="toast-icon" fill="none" stroke="#22c55e" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+      </svg>`;
+      break;
+    case 'error':
+      iconSvg = `<svg class="toast-icon" fill="none" stroke="#ef4444" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>`;
+      break;
+    case 'warning':
+      iconSvg = `<svg class="toast-icon" fill="none" stroke="#f59e0b" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>`;
+      break;
+  }
+  
+  toast.innerHTML = `
+    ${iconSvg}
+    <div class="toast-content">
+      <div class="toast-title">${title}</div>
+      <div class="toast-message">${message}</div>
+    </div>
+    <button class="toast-close">
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  `;
+
+  container.appendChild(toast);
+
+  // Add click handler for close button
+  const closeBtn = toast.querySelector('.toast-close');
+  const removeToast = () => {
+    toast.classList.add('removing');
+    setTimeout(() => toast.remove(), 300);
+  };
+  
+  closeBtn.addEventListener('click', removeToast);
+
+  // Auto remove after duration
+  setTimeout(removeToast, duration);
+}
+
+// Add these functions at the beginning of your script section
+async function initializeCollections() {
+  try {
+    // Get all existing categories from books first
+    const booksRef = db.collection('books');
+    const booksSnapshot = await booksRef.get();
+    const existingCategories = new Set();
+    
+    booksSnapshot.forEach(doc => {
+      const book = doc.data();
+      if (book.category) {
+        existingCategories.add(book.category);
+      }
+    });
+
+    // Initialize categories collection with existing categories from books
+    const categoriesRef = db.collection('categories');
+    const categoriesSnapshot = await categoriesRef.get();
+    const currentCategories = new Set();
+    
+    categoriesSnapshot.forEach(doc => {
+      currentCategories.add(doc.data().name);
+    });
+
+    // Add any missing categories from books to the categories collection
+    const promises = [];
+    existingCategories.forEach(category => {
+      if (!currentCategories.has(category)) {
+        promises.push(
+          categoriesRef.add({
+            name: category,
+            createdAt: new Date()
+          })
+        );
+      }
+    });
+
+    // Add 'General' category if it doesn't exist
+    if (!currentCategories.has('General') && !existingCategories.has('General')) {
+      promises.push(
+        categoriesRef.add({
+          name: 'General',
+          createdAt: new Date()
+        })
+      );
+    }
+
+    await Promise.all(promises);
+
+    // Initialize mediaTypes collection if it doesn't exist
+    const mediaTypesRef = db.collection('mediaTypes');
+    const mediaTypesDoc = await mediaTypesRef.get();
+    if (mediaTypesDoc.empty) {
+      const defaultMediaTypes = [
+        'Books',
+        'E-Books',
+        'E-Journal',
+        'E-Thesis',
+        'Audio/Visual',
+        'Journals'
+      ];
+      for (const type of defaultMediaTypes) {
+        await mediaTypesRef.add({
+          name: type,
+          createdAt: new Date()
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error initializing collections:', error);
+    showToast('error', 'Initialization Failed', 'Failed to initialize collections. Please refresh the page.');
+  }
+}
+
+// Function to load categories
+async function loadCategories() {
+  const categoriesList = document.getElementById('categoriesList');
+  const categoryFilter = document.getElementById('categoryFilter');
+  const editBookCategory = document.getElementById('editBookCategory');
+  const newBookCategory = document.getElementById('newBookCategory');
+  
+  try {
+    // Store the current selection before clearing
+    const currentSelection = categoryFilter ? categoryFilter.value : '';
+
+    // Clear existing options in all dropdowns
+    if (categoryFilter) {
+      categoryFilter.innerHTML = '<option value="">All Categories</option>';
+    }
+    if (editBookCategory) {
+      editBookCategory.innerHTML = '<option value="">Select Category</option>';
+    }
+    if (newBookCategory) {
+      newBookCategory.innerHTML = '<option value="">Select Category</option>';
+    }
+    if (categoriesList) {
+      categoriesList.innerHTML = '';
+    }
+
+    // Get all categories and books
+    const [categoriesSnapshot, booksSnapshot] = await Promise.all([
+      db.collection('categories').orderBy('name').get(),
+      db.collection('books').get()
+    ]);
+
+    // Count books per category
+    const booksByCategory = {};
+    booksSnapshot.forEach(doc => {
+      const book = doc.data();
+      if (book.category) {
+        booksByCategory[book.category] = (booksByCategory[book.category] || 0) + 1;
+      }
+    });
+
+    // Create a sorted array of categories
+    const categories = categoriesSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })).sort((a, b) => a.name.localeCompare(b.name));
+
+    // Add categories to dropdowns and list
+    categories.forEach(category => {
+      const bookCount = booksByCategory[category.name] || 0;
+      
+      // Add to filter dropdown
+      if (categoryFilter) {
+        const option = document.createElement('option');
+        option.value = category.name;
+        option.textContent = category.name;
+        categoryFilter.appendChild(option);
+      }
+      
+      // Add to edit book dropdown
+      if (editBookCategory) {
+        const editOption = document.createElement('option');
+        editOption.value = category.name;
+        editOption.textContent = category.name;
+        editBookCategory.appendChild(editOption);
+      }
+
+      // Add to new book dropdown
+      if (newBookCategory) {
+        const newOption = document.createElement('option');
+        newOption.value = category.name;
+        newOption.textContent = category.name;
+        newBookCategory.appendChild(newOption);
+      }
+
+      // Add to categories list in manage modal
+      if (categoriesList) {
+        const item = document.createElement('div');
+        item.className = 'list-group-item';
+        item.innerHTML = `
+          <div class="item-info">
+            <div class="category-badge">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+              ${category.name}
+            </div>
+            <span class="item-count">${bookCount} books</span>
+          </div>
+          <div class="action-buttons">
+            <button class="btn-action btn-add-book" title="Add Book with this Category">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+            </button>
+            <button class="btn-action btn-edit" title="Edit Category">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+            <button class="btn-action btn-delete" title="Delete Category">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        `;
+        
+        // Add quick add book handler
+        const addBookBtn = item.querySelector('.btn-add-book');
+        addBookBtn.onclick = () => {
+          const modal = document.getElementById('addBookModal');
+          if (modal) {
+            const closeModal = showModal(modal);
+            
+            // Pre-select the category in the form
+            const categorySelect = document.getElementById('newBookCategory');
+            if (categorySelect) {
+              categorySelect.value = category.name;
+            }
+          }
+        };
+        
+        // Add edit handler
+        const editBtn = item.querySelector('.btn-edit');
+        editBtn.onclick = async () => {
+          const newName = prompt('Enter new name for category:', category.name);
+          if (newName && newName.trim() !== '' && newName !== category.name) {
+            try {
+              // Update category in categories collection
+              await db.collection('categories').doc(category.id).update({
+                name: newName.trim(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+              });
+
+              // Update all books with this category
+              const booksToUpdate = await db.collection('books')
+                .where('category', '==', category.name)
+                .get();
+
+              const batch = db.batch();
+              booksToUpdate.forEach(doc => {
+                batch.update(doc.ref, { category: newName.trim() });
+              });
+              await batch.commit();
+
+              showToast('success', 'Category Updated', `Category has been renamed to "${newName}"`);
+              loadCategories(); // Reload categories
+              fetchBooks(); // Refresh book list
+            } catch (error) {
+              console.error('Error updating category:', error);
+              showToast('error', 'Update Failed', 'Failed to update category name.');
+            }
+          }
+        };
+        
+        // Add delete handler
+        const deleteBtn = item.querySelector('.btn-delete');
+        deleteBtn.onclick = async () => {
+          if (bookCount > 0) {
+            showToast('error', 'Cannot Delete', `Cannot delete category "${category.name}" because it contains ${bookCount} books.`);
+            return;
+          }
+
+          if (confirm(`Are you sure you want to delete the category "${category.name}"?`)) {
+            try {
+              await db.collection('categories').doc(category.id).delete();
+              showToast('success', 'Category Deleted', `Category "${category.name}" has been deleted.`);
+              loadCategories(); // Reload categories
+              fetchBooks(); // Refresh book list
+            } catch (error) {
+              console.error('Error deleting category:', error);
+              showToast('error', 'Delete Failed', 'Failed to delete category. Please try again.');
+            }
+          }
+        };
+        
+        categoriesList.appendChild(item);
+      }
+    });
+
+    // Add event listeners to dropdowns
+    [categoryFilter, editBookCategory, newBookCategory].forEach(dropdown => {
+      if (dropdown) {
+        dropdown.addEventListener('change', function() {
+          // Remove any extra whitespace and ensure proper styling
+          this.value = this.value.trim();
+          if (this.value === '') {
+            this.classList.add('text-muted');
+          } else {
+            this.classList.remove('text-muted');
+          }
+        });
+      }
+    });
+
+    // Restore the previous selection if it exists
+    if (categoryFilter && currentSelection) {
+      categoryFilter.value = currentSelection;
+    }
+
+  } catch (error) {
+    console.error('Error loading categories:', error);
+    showToast('error', 'Load Failed', 'Failed to load categories. Please refresh the page.');
+  }
+}
+
+// Function to load media types
+async function loadMediaTypes() {
+  const mediaTypesList = document.getElementById('mediaTypesList');
+  const mediaTypeFilter = document.getElementById('mediaTypeFilter');
+  const editBookMediaType = document.getElementById('editBookMediaType');
+  const newBookMediaType = document.getElementById('newBookMediaType');
+  
+  // Clear existing options
+  mediaTypeFilter.innerHTML = '<option value="">All Media Types</option>';
+  if (editBookMediaType) {
+    editBookMediaType.innerHTML = '<option value="">Select Media Type</option>';
+  }
+  if (newBookMediaType) {
+    newBookMediaType.innerHTML = '<option value="">Select Media Type</option>';
+  }
+  if (mediaTypesList) {
+    mediaTypesList.innerHTML = '';
+  }
+
+  try {
+    const snapshot = await db.collection('mediaTypes').orderBy('name').get();
+    const booksSnapshot = await db.collection('books').get();
+    const booksByMediaType = {};
+    
+    // Count books per media type
+    booksSnapshot.forEach(doc => {
+      const book = doc.data();
+      if (book.mediaType) {
+        booksByMediaType[book.mediaType] = (booksByMediaType[book.mediaType] || 0) + 1;
+      }
+    });
+
+    snapshot.forEach(doc => {
+      const mediaType = { id: doc.id, ...doc.data() };
+      const bookCount = booksByMediaType[mediaType.name] || 0;
+      
+      // Add to filter dropdown
+      const option = document.createElement('option');
+      option.value = mediaType.name;
+      option.textContent = mediaType.name;
+      mediaTypeFilter.appendChild(option);
+      
+      // Add to edit book dropdown
+      if (editBookMediaType) {
+        const editOption = option.cloneNode(true);
+        editBookMediaType.appendChild(editOption);
+      }
+
+      // Add to new book dropdown
+      if (newBookMediaType) {
+        const newOption = option.cloneNode(true);
+        newBookMediaType.appendChild(newOption);
+      }
+
+      // Add to media types list in manage modal
+      if (mediaTypesList) {
+        const item = document.createElement('div');
+        item.className = 'list-group-item';
+        item.innerHTML = `
+          <div class="item-info">
+            <div class="media-type-badge">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+              </svg>
+              ${mediaType.name}
+            </div>
+            <span class="item-count">${bookCount} books</span>
+          </div>
+          <div class="action-buttons">
+            <button class="btn-action btn-add-book" title="Add Book with this Media Type">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+            </button>
+            <button class="btn-action btn-edit" title="Edit Media Type">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+            <button class="btn-action btn-delete" title="Delete Media Type">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        `;
+        
+        // Add quick add book handler
+        const addBookBtn = item.querySelector('.btn-add-book');
+        addBookBtn.onclick = () => {
+          // First close the media type modal
+          const mediaTypeModal = document.getElementById('mediaTypeModal');
+          const existingBackdrop = document.querySelector('.modal-backdrop');
+          if (mediaTypeModal) {
+            mediaTypeModal.classList.remove('show');
+            if (existingBackdrop) {
+              existingBackdrop.remove();
+            }
+            setTimeout(() => {
+              mediaTypeModal.style.display = 'none';
+              
+              // Then open the add book modal
+              const addBookModal = document.getElementById('addBookModal');
+              if (addBookModal) {
+                const closeModal = showModal(addBookModal);
+                
+                // Pre-select the media type in the form
+                const mediaTypeSelect = document.getElementById('newBookMediaType');
+                if (mediaTypeSelect) {
+                  mediaTypeSelect.value = mediaType.name;
+                }
+
+                // Ensure close button works
+                const closeBtn = addBookModal.querySelector('.book-modal-close');
+                if (closeBtn) {
+                  closeBtn.onclick = closeModal;
+                }
+
+                // Ensure cancel button works
+                const cancelBtn = document.getElementById('cancelAddBook');
+                if (cancelBtn) {
+                  cancelBtn.onclick = closeModal;
+                }
+              }
+            }, 300); // Wait for the fade out animation
+          }
+        };
+        
+        // Add edit handler
+        const editBtn = item.querySelector('.btn-edit');
+        editBtn.onclick = () => {
+          const newName = prompt('Enter new name for media type:', mediaType.name);
+          if (newName && newName.trim() !== '' && newName !== mediaType.name) {
+            db.collection('mediaTypes').doc(mediaType.id).update({
+              name: newName.trim(),
+              updatedAt: new Date()
+            }).then(() => {
+              showToast('success', 'Media Type Updated', `Media type has been renamed to "${newName}"`);
+              loadMediaTypes();
+            }).catch(error => {
+              showToast('error', 'Update Failed', 'Failed to update media type name.');
+            });
+          }
+        };
+        
+        // Add delete handler
+        const deleteBtn = item.querySelector('.btn-delete');
+        deleteBtn.onclick = async () => {
+          if (confirm(`Are you sure you want to delete the media type "${mediaType.name}"? This will not delete the books with this media type.`)) {
+            try {
+              await db.collection('mediaTypes').doc(mediaType.id).delete();
+              showToast('success', 'Media Type Deleted', `Media type "${mediaType.name}" has been deleted.`);
+              loadMediaTypes();
+            } catch (error) {
+              showToast('error', 'Delete Failed', 'Failed to delete media type. Please try again.');
+            }
+          }
+        };
+        
+        mediaTypesList.appendChild(item);
+      }
+    });
+  } catch (error) {
+    console.error('Error loading media types:', error);
+    showToast('error', 'Load Failed', 'Failed to load media types. Please refresh the page.');
+  }
+}
+
+// Add clear button handlers
+document.getElementById('clearCategoryBtn')?.addEventListener('click', () => {
+  document.getElementById('newCategoryInput').value = '';
+});
+
+document.getElementById('clearMediaTypeBtn')?.addEventListener('click', () => {
+  document.getElementById('newMediaTypeInput').value = '';
+});
+
+// Add event listeners for category management
+document.getElementById('manageCategoriesBtn').addEventListener('click', () => {
+  const modal = document.getElementById('categoryModal');
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  document.body.appendChild(backdrop);
+
+  modal.style.display = 'block';
+  requestAnimationFrame(() => {
+    modal.classList.add('show');
+    backdrop.classList.add('show');
+  });
+
+  // Close modal function
+  const closeModal = () => {
+    modal.classList.remove('show');
+    backdrop.classList.remove('show');
+    setTimeout(() => {
+      modal.style.display = 'none';
+      backdrop.remove();
+    }, 300);
+  };
+
+  // Add close button handlers
+  const closeButton = modal.querySelector('.book-modal-close');
+  if (closeButton) {
+    closeButton.onclick = closeModal;
+  }
+  backdrop.onclick = closeModal;
+
+  // Add escape key handler
+  const escapeListener = (e) => {
+    if (e.key === 'Escape') {
+      closeModal();
+      document.removeEventListener('keydown', escapeListener);
+    }
+  };
+  document.addEventListener('keydown', escapeListener);
+
+  // Load categories
+  loadCategories();
+});
+
+// Add event listeners for media type management
+document.getElementById('manageMediaTypesBtn').addEventListener('click', () => {
+  const modal = document.getElementById('mediaTypeModal');
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  document.body.appendChild(backdrop);
+
+  modal.style.display = 'block';
+  requestAnimationFrame(() => {
+    modal.classList.add('show');
+    backdrop.classList.add('show');
+  });
+
+  // Close modal function
+  const closeModal = () => {
+    modal.classList.remove('show');
+    backdrop.classList.remove('show');
+    setTimeout(() => {
+      modal.style.display = 'none';
+      backdrop.remove();
+    }, 300);
+  };
+
+  // Add close button handlers
+  const closeButton = modal.querySelector('.book-modal-close');
+  if (closeButton) {
+    closeButton.onclick = closeModal;
+  }
+  backdrop.onclick = closeModal;
+
+  // Add escape key handler
+  const escapeListener = (e) => {
+    if (e.key === 'Escape') {
+      closeModal();
+      document.removeEventListener('keydown', escapeListener);
+    }
+  };
+  document.addEventListener('keydown', escapeListener);
+
+  // Load media types
+  loadMediaTypes();
+});
+
+// Add category button handler
+document.getElementById('addCategoryBtn').addEventListener('click', async () => {
+  const input = document.getElementById('newCategoryInput');
+  const categoryName = input.value.trim();
+  
+  if (categoryName) {
+    try {
+      await db.collection('categories').add({
+        name: categoryName,
+        createdAt: new Date()
+      });
+      input.value = '';
+      showToast('success', 'Category Added', `Category "${categoryName}" has been added.`);
+      loadCategories();
+    } catch (error) {
+      showToast('error', 'Add Failed', 'Failed to add category. Please try again.');
+    }
+  }
+});
+
+// Add media type button handler
+document.getElementById('addMediaTypeBtn').addEventListener('click', async () => {
+  const input = document.getElementById('newMediaTypeInput');
+  const mediaTypeName = input.value.trim();
+  
+  if (mediaTypeName) {
+    try {
+      await db.collection('mediaTypes').add({
+        name: mediaTypeName,
+        createdAt: new Date()
+      });
+      input.value = '';
+      showToast('success', 'Media Type Added', `Media type "${mediaTypeName}" has been added.`);
+      loadMediaTypes();
+    } catch (error) {
+      showToast('error', 'Add Failed', 'Failed to add media type. Please try again.');
+    }
+  }
+});
+
+// Initialize collections and load data when page loads
+document.addEventListener('DOMContentLoaded', () => {
+  initializeCollections().then(() => {
+    loadCategories();
+    loadMediaTypes();
+  });
+});
+
+// Add Book button click handler
+document.getElementById('addBookBtn').addEventListener('click', () => {
+  const modal = document.getElementById('addBookModal');
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  document.body.appendChild(backdrop);
+
+  // Reset form with correct image path
+  const newBookCover = document.getElementById('newBookCover');
+  newBookCover.src = '../image/default-book.png';
+  newBookCover.onerror = function() {
+    handleImageError(this);
+  };
+  
+  document.getElementById('newBookTitle').value = '';
+  document.getElementById('newBookAuthor').value = '';
+  document.getElementById('newBookCategory').value = '';
+  document.getElementById('newBookIsbn').value = '';
+  document.getElementById('newBookPublisher').value = '';
+  document.getElementById('newBookYear').value = '';
+  document.getElementById('newBookPages').value = '';
+  document.getElementById('newBookMediaType').value = '';
+  document.getElementById('newBookDescription').value = '';
+  document.getElementById('newBookStatus').value = 'available';
+  document.getElementById('newBookSubject').value = '';
+  document.getElementById('newBookStrandsCourses').value = '';
+  document.getElementById('newBookVolume').value = '';
+  document.getElementById('newPdfFileInput').value = '';
+  // Remove reference to old media file input
+  const audioInput = document.getElementById('newAudioInput');
+  const videoInput = document.getElementById('newVideoInput');
+  if (audioInput) audioInput.value = '';
+  if (videoInput) videoInput.value = '';
+  document.getElementById('newCoverImageInput').value = '';
+
+  // Show modal
+  modal.style.display = 'block';
+  requestAnimationFrame(() => {
+    modal.classList.add('show');
+    backdrop.classList.add('show');
+  });
+
+  // Close modal function
+  const closeModal = () => {
+    modal.classList.remove('show');
+    backdrop.classList.remove('show');
+    setTimeout(() => {
+      modal.style.display = 'none';
+      backdrop.remove();
+    }, 300);
+  };
+
+  // Add close button handlers
+  const closeButton = modal.querySelector('.book-modal-close');
+  const cancelButton = document.getElementById('cancelAddBook');
+  
+  if (closeButton) closeButton.onclick = closeModal;
+  if (cancelButton) cancelButton.onclick = closeModal;
+  backdrop.onclick = closeModal;
+
+  // Add escape key handler
+  const escapeListener = (e) => {
+    if (e.key === 'Escape') {
+      closeModal();
+      document.removeEventListener('keydown', escapeListener);
+    }
+  };
+  document.addEventListener('keydown', escapeListener);
+
+  // Load categories and media types
+  loadCategories();
+  loadMediaTypes();
+});
+
+// Handle new cover image upload
+document.getElementById('newCoverImageInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    try {
+      showToast('warning', 'Uploading Image', 'Please wait while we upload the cover image...', 2000);
+      const storageRef = firebase.storage().ref();
+      const fileRef = storageRef.child(`bookCovers/temp_${Date.now()}_${file.name}`);
+      await fileRef.put(file);
+      const imageUrl = await fileRef.getDownloadURL();
+      document.getElementById('newBookCover').src = imageUrl;
+      showToast('success', 'Image Uploaded', 'Cover image has been uploaded successfully.');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      showToast('error', 'Upload Failed', 'Failed to upload cover image. Please try again.');
+    }
+  }
+});
+
+// Add this function before the saveNewBook event listener
+async function handleMediaUpload(file, fileType) {
+  if (!file) {
+    throw new Error('No file provided');
+  }
+
+  // Create a more detailed progress UI
+  const progressContainer = document.createElement('div');
+  progressContainer.style.position = 'fixed';
+  progressContainer.style.top = '50%';
+  progressContainer.style.left = '50%';
+  progressContainer.style.transform = 'translate(-50%, -50%)';
+  progressContainer.style.backgroundColor = 'white';
+  progressContainer.style.padding = '20px';
+  progressContainer.style.borderRadius = '8px';
+  progressContainer.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+  progressContainer.style.zIndex = '9999';
+  progressContainer.innerHTML = `
+    <div style="text-align: center; margin-bottom: 10px;">
+      <h4>Uploading Media File</h4>
+      <p id="uploadSpeed">Calculating speed...</p>
+    </div>
+    <div style="width: 300px; height: 20px; background: #f0f0f0; border-radius: 10px; overflow: hidden;">
+      <div id="uploadProgress" style="width: 0%; height: 100%; background: #3b82f6; transition: width 0.3s ease;"></div>
+    </div>
+    <p id="uploadStatus" style="text-align: center; margin-top: 10px;">Starting upload...</p>
+  `;
+  document.body.appendChild(progressContainer);
+
+  try {
+    const storageRef = firebase.storage().ref();
+    const fileRef = storageRef.child(`mediaFiles/${Date.now()}_${file.name}`);
+    
+    // Set up metadata
+    const metadata = {
+      contentType: file.type,
+      customMetadata: {
+        'originalName': file.name,
+        'fileType': fileType
+      }
+    };
+
+    // Create upload task
+    const uploadTask = fileRef.put(file, metadata);
+    
+    // Track upload speed
+    let lastTime = Date.now();
+    let lastLoaded = 0;
+
+    // Return a promise that resolves with the download URL
+    return new Promise((resolve, reject) => {
+      uploadTask.on('state_changed',
+        // Progress handler
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          const progressBar = document.getElementById('uploadProgress');
+          const statusText = document.getElementById('uploadStatus');
+          const speedText = document.getElementById('uploadSpeed');
+          
+          if (progressBar) progressBar.style.width = `${progress}%`;
+          
+          // Calculate speed
+          const currentTime = Date.now();
+          const timeElapsed = (currentTime - lastTime) / 1000; // Convert to seconds
+          if (timeElapsed > 0) {
+            const bytesUploaded = snapshot.bytesTransferred - lastLoaded;
+            const speed = (bytesUploaded / timeElapsed / (1024 * 1024)).toFixed(2); // MB/s
+            
+            if (speedText) speedText.textContent = `Upload speed: ${speed} MB/s`;
+            if (statusText) statusText.textContent = `Uploaded ${Math.round(progress)}%`;
+            
+            lastTime = currentTime;
+            lastLoaded = snapshot.bytesTransferred;
+          }
+        },
+        // Error handler
+        (error) => {
+          document.body.removeChild(progressContainer);
+          console.error('Upload error:', error);
+          reject(error);
+        },
+        // Completion handler
+        async () => {
+          try {
+            const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+            document.body.removeChild(progressContainer);
+            resolve(downloadURL);
+          } catch (error) {
+            document.body.removeChild(progressContainer);
+            reject(error);
+          }
+        }
+      );
+    });
+  } catch (error) {
+    document.body.removeChild(progressContainer);
+    throw error;
+  }
+}
+
+// Add these functions after Firebase initialization
+async function getLastBookId() {
+  try {
+    // Query the books collection, ordered by bookId in descending order, limit to 1
+    const snapshot = await db.collection('books')
+      .orderBy('bookId', 'desc')
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) {
+      return '400100'; // Start with this number if no books exist
+    }
+
+    const lastBook = snapshot.docs[0].data();
+    return lastBook.bookId || '400100';
+  } catch (error) {
+    console.error('Error getting last book ID:', error);
+    return '400100';
+  }
+}
+
+async function generateNextBookId() {
+  const lastId = await getLastBookId();
+  const nextNumber = parseInt(lastId) + 1;
+  return nextNumber.toString();
+}
+
+// Update the saveNewBook event listener
+document.getElementById('saveNewBook').addEventListener('click', async () => {
+  try {
+    console.log('Starting save process...');
+    
+    // Get form values
+    const title = document.getElementById('newBookTitle').value.trim();
+    const authors = document.getElementById('newBookAuthor').value.trim();
+    const category = document.getElementById('newBookCategory').value;
+    const mediaType = document.getElementById('newBookMediaType').value;
+    const status = document.getElementById('newBookStatus').value;
+
+    console.log('Form values:', { title, authors, category, mediaType, status });
+
+    // Validation checks
+    if (!title || !authors || !category || !mediaType || !status) {
+      showToast('error', 'Missing Fields', 'Please fill in all required fields');
+      return;
+    }
+
+    // Generate next book ID
+    const bookId = await generateNextBookId();
+    console.log('Generated book ID:', bookId);
+
+    // Show loading toast
+    showToast('warning', 'Adding Book', 'Please wait while we save the book...', 5000);
+
+    // Initialize URLs
+    let coverURL = document.getElementById('newBookCover').src;
+    let pdfLink = '';
+
+    // Handle cover image upload if a new file is selected
+    const coverImageInput = document.getElementById('newCoverImageInput');
+    if (coverImageInput.files.length > 0) {
+      try {
+        console.log('Starting cover image upload...');
+        const coverFile = coverImageInput.files[0];
+        const storageRef = firebase.storage().ref();
+        const coverRef = storageRef.child(`bookCovers/${bookId}_${coverFile.name}`);
+        const coverSnapshot = await coverRef.put(coverFile);
+        coverURL = await coverRef.getDownloadURL();
+      } catch (error) {
+        console.error('Error uploading cover image:', error);
+        showToast('error', 'Upload Failed', 'Failed to upload cover image. Please try again.');
+        return;
+      }
+    }
+
+    // Handle file upload based on media type
+    if (mediaType === 'Audio / Visuals' || mediaType === 'Audio/Visual') {
+      const mediaFileInput = document.getElementById('mediaFileInput');
+      const mediaFileType = document.getElementById('mediaFileType').value;
+      
+      console.log('Processing Audio/Visual upload:', { mediaFileType });
+      
+      if (!mediaFileType) {
+        showToast('error', 'Missing File Type', 'Please select a media file type (MP3 or MP4)');
+        return;
+      }
+      
+      if (mediaFileInput.files.length > 0) {
+        try {
+          const mediaFile = mediaFileInput.files[0];
+          
+          // Validate file size
+          if (mediaFile.size > 100 * 1024 * 1024) {
+            showToast('error', 'File Too Large', 'Please upload a file smaller than 100MB');
+            return;
+          }
+          
+          // Validate file type
+          const validTypes = {
+            'mp3': ['audio/mpeg', 'audio/mp3'],
+            'mp4': ['video/mp4', 'application/mp4']
+          };
+          
+          if (!validTypes[mediaFileType].some(type => mediaFile.type.includes(type))) {
+            showToast('error', 'Invalid File', `Please upload a valid ${mediaFileType.toUpperCase()} file`);
+            return;
+          }
+          
+          // Upload the file using the new handler
+          pdfLink = await handleMediaUpload(mediaFile, mediaFileType);
+          
+        } catch (error) {
+          console.error('Media upload error:', error);
+          showToast('error', 'Upload Failed', error.message);
+          return;
+        }
+      } else {
+        showToast('error', 'Missing File', 'Please select an audio/visual file to upload');
+        return;
+      }
+    } else if (mediaType === 'E-Books' || mediaType === 'E-Journal' || mediaType === 'E-Thesis') {
+      // Handle PDF file upload for electronic documents
+      const pdfInput = document.getElementById('newPdfFileInput');
+      if (pdfInput.files.length > 0) {
+        try {
+          console.log('Starting PDF upload...');
+          const pdfFile = pdfInput.files[0];
+          console.log('PDF file:', pdfFile.name, pdfFile.type, pdfFile.size);
+          
+          // Validate PDF file
+          if (pdfFile.type !== 'application/pdf') {
+            showToast('error', 'Invalid File', 'Please upload a valid PDF file');
+            return;
+          }
+          
+          const storageRef = firebase.storage().ref();
+          const pdfRef = storageRef.child(`bookPDFs/${Date.now()}_${pdfFile.name}`);
+          console.log('Uploading PDF to:', pdfRef.fullPath);
+          
+          const uploadTask = pdfRef.put(pdfFile);
+          uploadTask.on('state_changed',
+            (snapshot) => {
+              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+              console.log('PDF upload progress:', progress.toFixed(2) + '%');
+              showToast('warning', 'Uploading PDF', `Upload progress: ${progress.toFixed(0)}%`, 1000);
+            }
+          );
+          
+          await uploadTask;
+          pdfLink = await uploadTask.snapshot.ref.getDownloadURL(); // Changed from fileURL to pdfLink
+          console.log('PDF URL:', pdfLink);
+          showToast('success', 'Upload Complete', 'PDF file uploaded successfully', 2000);
+          
+        } catch (error) {
+          console.error('Error uploading PDF:', error);
+          showToast('error', 'Upload Failed', 'Failed to upload PDF file. Please try again.');
+          return;
+        }
+      } else {
+        showToast('error', 'Missing File', `Please upload a PDF file for ${mediaType}`);
+        return;
+      }
+    }
+
+    // Create new book object with bookId
+    const newBook = {
+      bookId: bookId, // Add the sequential book ID
+      title,
+      authors,
+      category,
+      mediaType,
+      status,
+      isbn: document.getElementById('newBookIsbn').value.trim(),
+      publisher: document.getElementById('newBookPublisher').value.trim(),
+      subject: document.getElementById('newBookSubject').value.trim(),
+      strandsCourses: document.getElementById('newBookStrandsCourses').value.trim(),
+      volume: document.getElementById('newBookVolume').value.trim(),
+      year: document.getElementById('newBookYear').value ? parseInt(document.getElementById('newBookYear').value) : null,
+      pages: document.getElementById('newBookPages').value ? parseInt(document.getElementById('newBookPages').value) : null,
+      description: document.getElementById('newBookDescription').value.trim(),
+      img: coverURL,
+      pdfLink: pdfLink,
+      uploadedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      like: 0,
+      dislike: 0,
+      viewCount: 0,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    // Set default cover image if none selected
+    if (!coverImageInput.files.length) {
+      if (mediaType === 'Audio / Visuals' || mediaType === 'Audio/Visual') {
+        newBook.img = '../image/play-button.png';
+      } else {
+        newBook.img = '../image/default-book.png';
+      }
+    }
+
+    console.log('Saving book to Firestore:', newBook);
+
+    // Add to Firestore using bookId as the document ID
+    await db.collection('books').doc(bookId).set(newBook);
+    console.log('Book saved successfully with ID:', bookId);
+    
+    // Show success message
+    showToast('success', 'Book Added', `New book has been added with ID: ${bookId}`);
+    
+    // Close modal and reset form
+    const modal = document.getElementById('addBookModal');
+    const backdrop = document.querySelector('.modal-backdrop');
+    if (modal && backdrop) {
+      modal.classList.remove('show');
+      backdrop.classList.remove('show');
+      setTimeout(() => {
+        modal.style.display = 'none';
+        backdrop.remove();
+      }, 300);
+    }
+    
+    // Reset form fields
+    document.getElementById('newBookTitle').value = '';
+    document.getElementById('newBookAuthor').value = '';
+    document.getElementById('newBookCategory').value = '';
+    document.getElementById('newBookIsbn').value = '';
+    document.getElementById('newBookPublisher').value = '';
+    document.getElementById('newBookYear').value = '';
+    document.getElementById('newBookPages').value = '';
+    document.getElementById('newBookMediaType').value = '';
+    document.getElementById('newBookDescription').value = '';
+    document.getElementById('newBookStatus').value = 'available';
+    document.getElementById('newBookSubject').value = '';
+    document.getElementById('newBookStrandsCourses').value = '';
+    document.getElementById('newBookVolume').value = '';
+    document.getElementById('newPdfFileInput').value = '';
+    document.getElementById('mediaFileInput').value = '';
+    document.getElementById('mediaFileType').value = '';
+    document.getElementById('newCoverImageInput').value = '';
+    document.getElementById('newBookCover').src = '../image/default-book.png';
+    
+    // Refresh book list
+    fetchBooks();
+
+  } catch (error) {
+    console.error('Error adding book:', error);
+    showToast('error', 'Add Failed', `Failed to add book: ${error.message}`);
+  }
+});
+
+// Add this function to handle image errors globally
+function setupImageErrorHandling() {
+  // Handle book cover errors in the table
+  document.querySelectorAll('img').forEach(img => {
+    img.onerror = function() {
+      handleImageError(this);
+    };
+  });
+}
+
+// Add event listener for DOMContentLoaded to setup initial image error handling
+document.addEventListener('DOMContentLoaded', () => {
+  setupImageErrorHandling();
+});
+
+// Add this function at the beginning of your script section
+function handleImageError(img) {
+  // Only replace if not already the placeholder
+  if (!img.src.includes('via.placeholder.com')) {
+    img.src = 'https://via.placeholder.com/200x300?text=No+Image';
+  }
+  // Remove the error handler to prevent infinite loops
+  img.onerror = null;
+}
+
+// Add this function after the fetchBooks function
+function updateSearchSuggestions(searchTerm) {
+  if (!searchTerm) {
+    document.querySelector('.suggestions').style.display = 'none';
+    return;
+  }
+
+  const searchLower = searchTerm.toLowerCase();
+  
+  db.collection('books')
+    .orderBy('title')
+    .limit(5)
+    .get()
+    .then((snapshot) => {
+      const suggestions = document.getElementById('searchSuggestions');
+      suggestions.innerHTML = '';
+      
+      let matchFound = false;
+      
+      snapshot.docs.forEach((doc) => {
+        const book = { ...doc.data(), id: doc.id };
+        
+        if (book.title?.toLowerCase().includes(searchLower) || 
+            book.authors?.toLowerCase().includes(searchLower)) {
+          matchFound = true;
+          const li = document.createElement('li');
+          li.innerHTML = `
+            <img src="${book.img || '../image/default-book.png'}" 
+                 alt="${book.title}" 
+                 class="suggestion-photo"
+                 onerror="handleImageError(this)">
+            <span>${book.title}</span>
+          `;
+          
+          li.addEventListener('click', () => {
+            document.getElementById('searchInput').value = book.title;
+            document.querySelector('.suggestions').style.display = 'none';
+            fetchBooks();
+          });
+          
+          suggestions.appendChild(li);
+        }
+      });
+      
+      if (matchFound) {
+        document.querySelector('.suggestions').style.display = 'block';
+      } else {
+        document.querySelector('.suggestions').style.display = 'none';
+      }
+    });
+}
+
+// Update the search input event listener
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  updateSearchSuggestions(e.target.value);
+  fetchBooks();
+});
+
+// Hide suggestions when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.search-filter-container')) {
+    document.querySelector('.suggestions').style.display = 'none';
+  }
+});
+
+// Add quick-add functionality for categories and media types
+document.getElementById('quickAddCategory')?.addEventListener('click', () => {
+  const modal = document.getElementById('quickAddCategoryModal');
+  const closeModal = showModal(modal);
+
+  const input = document.getElementById('quickNewCategoryInput');
+  const confirmBtn = document.getElementById('quickConfirmCategory');
+  const cancelBtn = document.getElementById('quickCancelCategory');
+  const closeBtn = modal.querySelector('.book-modal-close');
+
+  // Clear previous input
+  input.value = '';
+
+  const handleConfirm = async () => {
+    const newCategoryName = input.value.trim();
+    if (newCategoryName) {
+      try {
+        // Add new category
+        await db.collection('categories').add({
+          name: newCategoryName,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        showToast('success', 'Category Added', `Category "${newCategoryName}" has been added.`);
+        
+        // Reload categories and select the new one
+        await loadCategories();
+        const newBookCategory = document.getElementById('newBookCategory');
+        if (newBookCategory) {
+          newBookCategory.value = newCategoryName;
+        }
+        closeModal();
+      } catch (error) {
+        console.error('Error adding category:', error);
+        showToast('error', 'Add Failed', 'Failed to add category. Please try again.');
+      }
+    } else {
+      showToast('error', 'Invalid Input', 'Please enter a category name.');
+    }
+  };
+
+  const handleCancel = () => {
+    closeModal();
+  };
+
+  // Add event listeners
+  confirmBtn.addEventListener('click', handleConfirm);
+  cancelBtn.addEventListener('click', handleCancel);
+  closeBtn.addEventListener('click', handleCancel);
+
+  // Add enter key handler
+  input.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      handleConfirm();
+    }
+  });
+});
+
+document.getElementById('quickAddMediaType')?.addEventListener('click', () => {
+  const modal = document.getElementById('quickAddMediaTypeModal');
+  const closeModal = showModal(modal);
+
+  const input = document.getElementById('quickNewMediaTypeInput');
+  const confirmBtn = document.getElementById('quickConfirmMediaType');
+  const cancelBtn = document.getElementById('quickCancelMediaType');
+  const closeBtn = modal.querySelector('.book-modal-close');
+
+  // Clear previous input
+  input.value = '';
+
+  const handleConfirm = async () => {
+    const newMediaTypeName = input.value.trim();
+    if (newMediaTypeName) {
+      try {
+        // Add new media type
+        await db.collection('mediaTypes').add({
+          name: newMediaTypeName,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        showToast('success', 'Media Type Added', `Media type "${newMediaTypeName}" has been added.`);
+        
+        // Reload media types and select the new one
+        await loadMediaTypes();
+        const newBookMediaType = document.getElementById('newBookMediaType');
+        if (newBookMediaType) {
+          newBookMediaType.value = newMediaTypeName;
+        }
+        closeModal();
+      } catch (error) {
+        showToast('error', 'Add Failed', 'Failed to add media type. Please try again.');
+      }
+    } else {
+      showToast('error', 'Invalid Input', 'Please enter a media type name.');
+    }
+  };
+
+  const handleCancel = () => {
+    closeModal();
+  };
+
+  // Add event listeners
+  confirmBtn.addEventListener('click', handleConfirm);
+  cancelBtn.addEventListener('click', handleCancel);
+  closeBtn.addEventListener('click', handleCancel);
+
+  // Add enter key handler
+  input.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      handleConfirm();
+    }
+  });
+});
+
+// Media type change handler
+document.getElementById('newBookMediaType').addEventListener('change', function() {
+  const mediaType = this.value;
+  const pdfSection = document.getElementById('pdfUploadSection');
+  const mediaSection = document.getElementById('mediaUploadSection');
+  const fileLabel = document.getElementById('fileUploadLabel');
+  const coverPreview = document.getElementById('newBookCover');
+  
+  console.log('Media type changed to:', mediaType);
+  
+  // Reset file inputs
+  document.getElementById('newPdfFileInput').value = '';
+  document.getElementById('mediaFileInput').value = '';
+  document.getElementById('mediaFileType').value = '';
+  
+  // Handle different media types
+  if (mediaType === 'Audio / Visuals' || mediaType === 'Audio/Visual') {
+    // Show media section for audio/visual content
+    pdfSection.style.display = 'none';
+    mediaSection.style.display = 'block';
+    fileLabel.textContent = 'Upload Media File (MP3/MP4)';
+    if (coverPreview) coverPreview.src = '../image/play-button.png';
+  } else if (mediaType === 'E-Books' || mediaType === 'E-Journal' || mediaType === 'E-Thesis') {
+    // Show PDF section for electronic documents
+    pdfSection.style.display = 'block';
+    mediaSection.style.display = 'none';
+    fileLabel.textContent = `Upload PDF File (for ${mediaType})`;
+    if (coverPreview && coverPreview.src.includes('play-button.png')) {
+      coverPreview.src = '../image/default-book.png';
+    }
+  } else {
+    // Hide both sections for physical books
+    pdfSection.style.display = 'none';
+    mediaSection.style.display = 'none';
+    fileLabel.textContent = 'File Upload';
+    if (coverPreview && coverPreview.src.includes('play-button.png')) {
+      coverPreview.src = '../image/default-book.png';
+    }
+  }
+});
+
+// Media file type change handler
+document.getElementById('mediaFileType').addEventListener('change', function() {
+  const mediaInput = document.getElementById('mediaFileInput');
+  if (this.value === 'mp3') {
+    mediaInput.accept = '.mp3';
+  } else if (this.value === 'mp4') {
+    mediaInput.accept = '.mp4';
+  }
+  mediaInput.value = ''; // Clear the file input when changing types
+});
+
+// Add event listeners for search and filters
+document.addEventListener('DOMContentLoaded', () => {
+  // Setup search and filter handlers
+  const searchInput = document.getElementById('searchInput');
+  const categoryFilter = document.getElementById('categoryFilter');
+  const mediaTypeFilter = document.getElementById('mediaTypeFilter');
+
+  if (searchInput) {
+    searchInput.addEventListener('input', fetchBooks);
+  }
+  
+  if (categoryFilter) {
+    categoryFilter.addEventListener('change', (e) => {
+      e.preventDefault();
+      fetchBooks();
+    });
+  }
+  
+  if (mediaTypeFilter) {
+    mediaTypeFilter.addEventListener('change', fetchBooks);
+  }
+
+  // Initial load
+  fetchBooks();
+});
+
+// Function to export books to CSV
+function exportToCSV() {
+  // Get all books from Firestore
+  db.collection('books').get().then((snapshot) => {
+    // Convert books data to CSV format
+    const csvRows = [];
+    
+    // Add CSV header
+    const headers = ['Book ID', 'Title', 'Authors', 'Category', 'Media Type', 'ISBN', 'Publisher', 
+                    'Subject', 'Strands/Courses', 'Volume', 'Year', 'Pages', 'Description', 
+                    'Upload Date', 'Likes', 'Dislikes', 'View Count'];
+    csvRows.push(headers.join(','));
+    
+    // Add book data
+    snapshot.docs.forEach((doc) => {
+      const book = doc.data();
+      const uploadDate = book.uploadedAt ? 
+        (book.uploadedAt.toDate ? book.uploadedAt.toDate().toLocaleDateString() : 
+         new Date(book.uploadedAt).toLocaleDateString()) : 'N/A';
+      
+      const row = [
+        book.bookId || doc.id,
+        `"${(book.title || '').replace(/"/g, '""')}"`,
+        `"${(book.authors || '').replace(/"/g, '""')}"`,
+        `"${(book.category || '').replace(/"/g, '""')}"`,
+        `"${(book.mediaType || '').replace(/"/g, '""')}"`,
+        `"${(book.isbn || '').replace(/"/g, '""')}"`,
+        `"${(book.publisher || '').replace(/"/g, '""')}"`,
+        `"${(book.subject || '').replace(/"/g, '""')}"`,
+        `"${(book.strandsCourses || '').replace(/"/g, '""')}"`,
+        `"${(book.volume || '').replace(/"/g, '""')}"`,
+        book.year || '',
+        book.pages || '',
+        `"${(book.description || '').replace(/"/g, '""')}"`,
+        uploadDate,
+        book.like || 0,
+        book.dislike || 0,
+        book.viewCount || 0
+      ];
+      csvRows.push(row.join(','));
+    });
+    
+    // Create and download CSV file
+    const csvContent = csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'book_catalog.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('success', 'Export Complete', 'Book catalog has been exported to CSV');
+    }
+  }).catch((error) => {
+    console.error('Error exporting books:', error);
+    showToast('error', 'Export Failed', 'Failed to export book catalog. Please try again.');
+  });
+}
+
+// Add export button click handler
+document.getElementById('exportBtn').addEventListener('click', exportToCSV);
+
+// Add logout button click handler
+document.getElementById('logoutSidebar').addEventListener('click', () => {
+  const modal = document.getElementById('logoutModal');
+  const closeModal = showModal(modal);
+
+  // Add close button handler
+  const closeButton = modal.querySelector('.modal-close');
+  if (closeButton) {
+    closeButton.onclick = closeModal;
+  }
+
+  // Add cancel button handler
+  const cancelButton = document.getElementById('cancelLogout');
+  if (cancelButton) {
+    cancelButton.onclick = closeModal;
+  }
+
+  // Add confirm button handler
+  const confirmButton = document.getElementById('confirmLogout');
+  if (confirmButton) {
+    confirmButton.onclick = () => {
+      auth.signOut().then(() => {
+        showToast('success', 'Logout Successful', 'You have been successfully logged out.');
+        closeModal();
+        window.location.href = '/index.html';
+      }).catch((error) => {
+        console.error('Error logging out:', error);
+        showToast('error', 'Logout Failed', 'Failed to log out. Please try again.');
+        closeModal();
+      });
+    };
+  }
+
+  // Show modal
+  modal.style.display = 'block';
+  requestAnimationFrame(() => {
+    modal.classList.add('show');
+    document.body.classList.add('modal-open');
+    requestAnimationFrame(() => {
+      modal.classList.add('show');
+    });
+  });
+});
+
+// Add this to your existing JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+  // Create and add the Add Quiz button
+  const addQuizBtn = document.createElement('button');
+  addQuizBtn.className = 'btn btn-info ms-2';
+  addQuizBtn.setAttribute('data-bs-toggle', 'modal');
+  addQuizBtn.setAttribute('data-bs-target', '#quizModal');
+  addQuizBtn.innerHTML = `
+    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-2">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+    </svg>
+    Add Quiz
+  `;
+  
+  // Add the quiz button next to the existing buttons
+  document.querySelector('.d-flex.align-items-center.gap-3').appendChild(addQuizBtn);
+
+  // Initialize the modal
+  const quizModal = new bootstrap.Modal(document.getElementById('quizModal'));
+
+  // Load books when modal is shown
+  document.getElementById('quizModal').addEventListener('show.bs.modal', function() {
+    loadBooks();
+  });
+
+  // Load books function
+  async function loadBooks() {
+    try {
+      const booksRef = firebase.firestore().collection('books');
+      const snapshot = await booksRef.get();
+      
+      // Update the global allBooks array
+      allBooks = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      // Clear the search input and results
+      const bookSearch = document.getElementById('bookSearch');
+      const bookSearchResults = document.getElementById('bookSearchResults');
+      const selectedBookInfo = document.getElementById('selectedBookInfo');
+      
+      if (bookSearch) bookSearch.value = '';
+      if (bookSearchResults) bookSearchResults.classList.add('d-none');
+      if (selectedBookInfo) selectedBookInfo.classList.add('d-none');
+      
+    } catch (error) {
+      console.error('Error loading books:', error);
+      alert('Error loading books. Please try again.');
+    }
+  }
+
+  // Update subject information
+  async function updateSubjectInfo(subjectId) {
+    try {
+      const subjectRef = firebase.firestore().collection('subjectSelection').doc(subjectId);
+      const subjectDoc = await subjectRef.get();
+      
+      if (subjectDoc.exists) {
+        const subjectData = subjectDoc.data();
+        document.getElementById('subjectName').value = subjectData.SubjectName;
+        document.getElementById('subjectId').value = subjectId;
+      } else {
+        document.getElementById('subjectName').value = 'Subject not found';
+        document.getElementById('subjectId').value = '';
+      }
+    } catch (error) {
+      console.error('Error fetching subject:', error);
+      document.getElementById('subjectName').value = 'Error loading subject';
+      document.getElementById('subjectId').value = '';
+    }
+  }
+
+  // Handle adding new options
+
+
+  // Handle removing options
+  document.getElementById('optionsContainer').addEventListener('click', function(e) {
+    if (e.target.classList.contains('remove-option')) {
+      const optionGroup = e.target.closest('.option-group');
+      const optionsContainer = document.getElementById('optionsContainer');
+      
+      // Don't remove if it's the last option
+      if (optionsContainer.getElementsByClassName('option-group').length > 1) {
+        optionGroup.remove();
+        // Renumber remaining options
+        const remainingOptions = optionsContainer.getElementsByClassName('option-group');
+        Array.from(remainingOptions).forEach((group, index) => {
+          const number = index + 1;
+          group.dataset.optionNumber = number;
+          group.querySelector('label').textContent = `Option ${number}`;
+        });
+        updateCorrectAnswerDropdown();
+      } else {
+        alert('You must have at least one option');
+      }
+    }
+  });
+
+  // Update correct answer dropdown when options change
+  function updateCorrectAnswerDropdown() {
+    const correctAnswerSelect = document.getElementById('correctAnswer');
+    const optionInputs = document.getElementsByClassName('option-input');
+    
+    correctAnswerSelect.innerHTML = '<option value="">Select Correct Answer</option>';
+    
+    Array.from(optionInputs).forEach((input, index) => {
+      const optionNumber = index + 1;
+      const optionText = input.value.trim();
+      const optionValue = optionText || `Option ${optionNumber}`;
+      
+      const option = document.createElement('option');
+      option.value = optionValue;
+      option.textContent = optionValue;
+      correctAnswerSelect.appendChild(option);
+    });
+  }
+
+  // Update correct answer dropdown when option inputs change
+  document.getElementById('optionsContainer').addEventListener('input', function(e) {
+    if (e.target.classList.contains('option-input')) {
+      updateCorrectAnswerDropdown();
+    }
+  });
+
+  // Save quiz function
+  async function saveQuiz() {
+    const selectedBookId = document.getElementById('selectedBookId').value;
+    const subject = document.getElementById('subjectName').value;
+    
+    if (!selectedBookId) {
+      alert('Please select a book');
+      return;
+    }
+
+    if (!subject) {
+      alert('Invalid subject. Please select a book with a subject.');
+      return;
+    }
+
+    const selectedBook = allBooks.find(book => book.bookId === selectedBookId || book.id === selectedBookId);
+    if (!selectedBook) {
+      alert('Selected book not found. Please try again.');
+      return;
+    }
+
+    // Get all options
+    const optionInputs = document.getElementsByClassName('option-input');
+    const options = Array.from(optionInputs).map(input => input.value.trim());
+
+    // Validate fields
+    if (!document.getElementById('quizQuestion').value.trim()) {
+      alert('Please enter a question');
+      return;
+    }
+
+    if (options.some(opt => !opt)) {
+      alert('Please fill in all options');
+      return;
+    }
+
+    const correctAnswer = document.getElementById('correctAnswer').value;
+    if (!correctAnswer) {
+      alert('Please select the correct answer');
+      return;
+    }
+
+    // Create quiz data object with numbered options
+    const quizData = {
+      bookId: selectedBook.bookId || selectedBook.id,
+      bookTitle: selectedBook.title,
+      subject: subject,
+      question: document.getElementById('quizQuestion').value.trim(),
+      correctAnswer: correctAnswer,
+      option1: options[0],
+      option2: options[1],
+      option3: options[2],
+      option4: options[3]
+    };
+
+    // Add timestamp
+    quizData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+
+    try {
+      await firebase.firestore().collection('quiz').add(quizData);
+      alert('Quiz saved successfully!');
+      quizModal.hide();
+      resetForm();
+    } catch (error) {
+      console.error('Error saving quiz:', error);
+      alert('Error saving quiz. Please try again.');
+    }
+  }
+
+  // Reset form function
+  function resetForm() {
+    document.getElementById('quizForm').reset();
+    document.getElementById('subjectName').value = '';
+    document.getElementById('subjectId').value = '';
+    document.getElementById('selectedBookId').value = '';
+    document.getElementById('selectedBookInfo').classList.add('d-none');
+    document.getElementById('bookSearchResults').classList.add('d-none');
+    updateCorrectAnswerDropdown();
+  }
+
+  // ... rest of the existing code (options handling, etc.) ...
+
+  // Update event listeners
+  document.getElementById('saveQuiz').addEventListener('click', saveQuiz);
+  document.getElementById('quizModal').addEventListener('hidden.bs.modal', resetForm);
+
+  let allBooks = []; // Store all books for searching
+  let searchDebounceTimer;
+
+  // Load books when modal is shown
+  document.getElementById('quizModal').addEventListener('show.bs.modal', async function() {
+    try {
+      const booksRef = firebase.firestore().collection('books');
+      const snapshot = await booksRef.get();
+      
+      allBooks = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (error) {
+      console.error('Error loading books:', error);
+      alert('Error loading books. Please try again.');
+    }
+  });
+
+  // Handle book search
+  document.getElementById('bookSearch').addEventListener('input', function(e) {
+    clearTimeout(searchDebounceTimer);
+    const searchTerm = e.target.value.trim().toLowerCase();
+    
+    if (searchTerm.length < 1) {
+      document.getElementById('bookSearchResults').classList.add('d-none');
+      return;
+    }
+
+    searchDebounceTimer = setTimeout(() => {
+      const results = allBooks.filter(book => 
+        (book.title?.toLowerCase().includes(searchTerm) || false) ||
+        (book.bookId?.toString().includes(searchTerm) || false)
+      ).slice(0, 5); // Limit to 5 results
+
+      const resultsContainer = document.getElementById('bookSearchResults');
+      if (!resultsContainer) return; // Guard against null element
+      
+      resultsContainer.innerHTML = '';
+
+      if (results.length > 0) {
+        results.forEach(book => {
+          const div = document.createElement('div');
+          div.className = 'search-result-item';
+          div.innerHTML = `
+            <div class="book-title">${book.title || 'Untitled'}</div>
+            <div class="book-id">ID: ${book.bookId || 'N/A'}</div>
+          `;
+          div.addEventListener('click', () => selectBook(book));
+          resultsContainer.appendChild(div);
+        });
+        resultsContainer.classList.remove('d-none');
+      } else {
+        resultsContainer.innerHTML = '<div class="search-result-item">No books found</div>';
+        resultsContainer.classList.remove('d-none');
+      }
+    }, 300);
+  });
+
+  // Close search results when clicking outside
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('#bookSearch') && !e.target.closest('#bookSearchResults')) {
+      document.getElementById('bookSearchResults').classList.add('d-none');
+    }
+  });
+
+  // Handle book selection
+  async function selectBook(book) {
+    if (!book) return;
+    
+    const bookSearch = document.getElementById('bookSearch');
+    const bookSearchResults = document.getElementById('bookSearchResults');
+    const selectedBookId = document.getElementById('selectedBookId');
+    const selectedBookInfo = document.getElementById('selectedBookInfo');
+    const subjectName = document.getElementById('subjectName');
+    const subjectId = document.getElementById('subjectId');
+    
+    if (!bookSearch || !bookSearchResults || !selectedBookId || !selectedBookInfo || !subjectName || !subjectId) return;
+
+    bookSearch.value = book.title || 'Untitled';
+    bookSearchResults.classList.add('d-none');
+    selectedBookId.value = book.bookId || book.id || '';
+
+    // Show selected book info
+    selectedBookInfo.innerHTML = `
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <div class="book-title">${book.title || 'Untitled'}</div>
+          <div class="book-id">ID: ${book.bookId || book.id || 'N/A'}</div>
+          <div class="book-subject">Subject: ${book.subject || 'N/A'}</div>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearBookSelection()">
+          Change Book
+        </button>
+      </div>
+    `;
+    selectedBookInfo.classList.remove('d-none');
+
+    // Update subject information directly from the book data
+    subjectName.value = book.subject || 'No Subject';
+    subjectId.value = book.subject || ''; // Using subject as the ID since we're not using subjectSelection anymore
+  }
+
+  // Function to clear book selection
+  window.clearBookSelection = function() {
+    const elements = {
+      bookSearch: document.getElementById('bookSearch'),
+      selectedBookId: document.getElementById('selectedBookId'),
+      selectedBookInfo: document.getElementById('selectedBookInfo'),
+      subjectName: document.getElementById('subjectName'),
+      subjectId: document.getElementById('subjectId')
+    };
+
+    // Clear values and hide elements if they exist
+    if (elements.bookSearch) {
+      elements.bookSearch.value = '';
+      elements.bookSearch.focus();
+    }
+    if (elements.selectedBookId) elements.selectedBookId.value = '';
+    if (elements.selectedBookInfo) elements.selectedBookInfo.classList.add('d-none');
+    if (elements.subjectName) elements.subjectName.value = '';
+    if (elements.subjectId) elements.subjectId.value = '';
+  };
+});
+
+// Add this function to view quizzes for a book
+function viewQuizzes(bookId) {
+  // Fetch quizzes for the book from Firestore
+  db.collection('quiz').where('bookId', '==', bookId).get().then((snapshot) => {
+    const quizzesList = document.getElementById('quizzesList');
+    quizzesList.innerHTML = '';
+    
+    snapshot.forEach(doc => {
+      const quiz = doc.data();
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <strong>${quiz.bookTitle}</strong> - ${quiz.question}
+        <button class="btn btn-secondary btn-sm" onclick="editQuiz('${doc.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteQuiz('${doc.id}')">Delete</button>
+      `;
+      quizzesList.appendChild(li);
+    });
+  }).catch((error) => {
+    console.error('Error loading quizzes:', error);
+    showToast('error', 'Load Failed', 'Failed to load quizzes. Please try again.');
+  });
+
+  // Show the quizzes modal
+  const quizzesModal = document.getElementById('quizzesModal');
+  quizzesModal.style.display = 'block';
+  requestAnimationFrame(() => {
+    quizzesModal.classList.add('show');
+  });
+}
+
+// Add this function to edit a quiz
+function editQuiz(quizId) {
+  // Fetch the quiz data from Firestore
+  db.collection('quiz').doc(quizId).get().then((doc) => {
+    if (doc.exists) {
+      const quiz = doc.data();
+      document.getElementById('editQuestion').value = quiz.question;
+      
+      // Set options
+      document.getElementById('editOption1').value = quiz.option1 || '';
+      document.getElementById('editOption2').value = quiz.option2 || '';
+      document.getElementById('editOption3').value = quiz.option3 || '';
+      document.getElementById('editOption4').value = quiz.option4 || '';
+      
+      // Update correct answer dropdown
+      const correctAnswerSelect = document.getElementById('editCorrectAnswer');
+      correctAnswerSelect.innerHTML = '<option value="">Select Correct Answer</option>';
+      
+      [quiz.option1, quiz.option2, quiz.option3, quiz.option4].forEach((option, index) => {
+        if (option) {
+          const optionElement = document.createElement('option');
+          optionElement.value = option;
+          optionElement.textContent = option;
+          if (option === quiz.correctAnswer) {
+            optionElement.selected = true;
+          }
+          correctAnswerSelect.appendChild(optionElement);
+        }
+      });
+      
+      // Update the form
+      document.getElementById('editQuizId').value = quizId;
+      
+      // Show the edit quiz modal
+      const editQuizModal = document.getElementById('editQuizModal');
+      editQuizModal.style.display = 'block';
+      requestAnimationFrame(() => {
+        editQuizModal.classList.add('show');
+      });
+    }
+  }).catch((error) => {
+    console.error('Error loading quiz:', error);
+    showToast('error', 'Load Failed', 'Failed to load quiz. Please try again.');
+  });
+}
+
+// Add this function to delete a quiz
+function deleteQuiz(quizId) {
+  if (confirm('Are you sure you want to delete this quiz?')) {
+    db.collection('quiz').doc(quizId).delete().then(() => {
+      showToast('success', 'Quiz Deleted', 'The quiz has been deleted successfully.');
+      viewQuizzes(currentBookId); // Refresh quizzes list
+    }).catch((error) => {
+      console.error('Error deleting quiz:', error);
+      showToast('error', 'Delete Failed', 'Failed to delete quiz. Please try again.');
+    });
+  }
+}
+
+// Add this function to close the quizzes modal
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.classList.remove('show');
+    modal.style.display = 'none';
+  }
+}
+
+// Add this function to save changes to the quiz
+document.getElementById('editQuizForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const quizId = document.getElementById('editQuizId').value;
+  const question = document.getElementById('editQuestion').value;
+  const option1 = document.getElementById('editOption1').value;
+  const option2 = document.getElementById('editOption2').value;
+  const option3 = document.getElementById('editOption3').value;
+  const option4 = document.getElementById('editOption4').value;
+  const correctAnswer = document.getElementById('editCorrectAnswer').value;
+  
+  // Validate all fields are filled
+  if (!question || !option1 || !option2 || !option3 || !option4 || !correctAnswer) {
+    alert('Please fill in all fields');
+    return;
+  }
+  
+  // Update the quiz data in Firestore
+  db.collection('quiz').doc(quizId).update({
+    question: question,
+    option1: option1,
+    option2: option2,
+    option3: option3,
+    option4: option4,
+    correctAnswer: correctAnswer
+  }).then(() => {
+    showToast('success', 'Quiz Updated', 'The quiz has been updated successfully.');
+    closeModal('editQuizModal');
+    viewQuizzes(currentBookId);
+  }).catch((error) => {
+    console.error('Error updating quiz:', error);
+    showToast('error', 'Update Failed', 'Failed to update quiz. Please try again.');
+  });
+});
+
+// Update correct answer dropdown when edit options change
+document.getElementById('editOptionsContainer').addEventListener('input', function(e) {
+  if (e.target.classList.contains('edit-option-input')) {
+    const correctAnswerSelect = document.getElementById('editCorrectAnswer');
+    const optionInputs = document.getElementsByClassName('edit-option-input');
+    const selectedValue = correctAnswerSelect.value;
+    
+    correctAnswerSelect.innerHTML = '<option value="">Select Correct Answer</option>';
+    
+    Array.from(optionInputs).forEach((input) => {
+      const optionText = input.value.trim();
+      if (optionText) {
+        const option = document.createElement('option');
+        option.value = optionText;
+        option.textContent = optionText;
+        if (optionText === selectedValue) {
+          option.selected = true;
+        }
+        correctAnswerSelect.appendChild(option);
+      }
+    });
+  }
+});
+
+// Function to show quizzes
+async function showQuizzes(bookId) {
+  const quizzesModal = document.getElementById('quizzesModal');
+  const tableBody = document.getElementById('quizzesTableBody');
+  
+  try {
+    // Clear existing table content
+    tableBody.innerHTML = '';
+    
+    // Fetch quizzes from Firestore
+    const quizzesRef = collection(db, 'quizzes');
+    const q = query(quizzesRef, where('bookId', '==', bookId));
+    const querySnapshot = await getDocs(q);
+    
+    querySnapshot.forEach((doc) => {
+      const quiz = doc.data();
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${quiz.bookTitle || 'N/A'}</td>
+        <td>${quiz.question || 'N/A'}</td>
+        <td>${quiz.correctAnswer || 'N/A'}</td>
+        <td>${quiz.option1 || 'N/A'}</td>
+        <td>${quiz.option2 || 'N/A'}</td>
+        <td>${quiz.option3 || 'N/A'}</td>
+        <td>
+          <button class="btn btn-sm btn-warning me-2" onclick="editQuiz('${doc.id}')">Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteQuiz('${doc.id}')">Delete</button>
+        </td>
+      `;
+      tableBody.appendChild(row);
+    });
+    
+    // Show the quizzes modal
+    showModal(quizzesModal);
+  } catch (error) {
+    console.error('Error fetching quizzes:', error);
+    alert('Error fetching quizzes. Please try again.');
+  }
+}
+
+// Function to edit quiz
+async function editQuiz(quizId) {
+  // Implement edit quiz functionality
+  console.log('Edit quiz:', quizId);
+  // You can implement the edit functionality here
+}
+
+// Function to delete quiz
+async function deleteQuiz(quizId) {
+  if (confirm('Are you sure you want to delete this quiz?')) {
+    try {
+      await deleteDoc(doc(db, 'quizzes', quizId));
+      // Refresh the quizzes table
+      showQuizzes(currentBookId);
+    } catch (error) {
+      console.error('Error deleting quiz:', error);
+      alert('Error deleting quiz. Please try again.');
+    }
+  }
+}
+
+// ... existing code ...
+    // Add event listener for export button
+    document.getElementById('exportBtn').addEventListener('click', exportToCSV);
+
+    // Add event listener for import button
+   
+
+    // CSV functions
+    window.downloadTemplate = function() {
+      const template = `"STI College Vigan",,,,,,,,,,,,
+"Book ID","Title","Authors","Category","Media Type","ISBN","Publisher","Subject","Strands/Courses","Volume","Year","Pages","Description"`;
+
+      const blob = new Blob([template], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'book_template.csv';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    };
+
+    // Handle CSV upload
+    document.getElementById('csvFile').addEventListener('change', async function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      isUploading = true;
+      cancelUpload = false;
+
+      openModal('loadingModal');
+
+      document.getElementById('cancelUpload').onclick = function() {
+        cancelUpload = true;
+        isUploading = false;
+        closeModal('loadingModal');
+        closeModal('csvModal');
+        csvFile.value = '';
+      };
+
+      reader.onload = async (event) => {
+        const csvData = event.target.result;
+        const rows = csvData.split('\n').slice(1); // Skip first row
+        
+        let updatedRows = [];
+        let addedRows = [];
+        let errorRows = [];
+
+        for (const row of rows) {
+          if (cancelUpload) {
+            alert('Upload cancelled');
+            return;
+          }
+
+          const [bookId, title, authors, category, mediaType, isbn, publisher, subject, strandsCourses, volume, year, pages, description] = row.split(',').map(cell => cell.replace(/^"|"$/g, '').trim());
+          
+          if (!bookId || !title) continue;
+
+          try {
+            document.getElementById('uploadProgress').textContent = `Processing: ${title}`;
+
+            const bookData = {
+              bookId,
+              title,
+              authors,
+              category,
+              mediaType,
+              isbn,
+              publisher,
+              subject,
+              strandsCourses,
+              volume,
+              year,
+              pages,
+              description,
+              uploadedAt: new Date(),
+              like: 0,
+              dislike: 0,
+              viewCount: 0,
+              img: mediaType === "Audio / Visuals" ? "../image/play-button.png" : "../image/image.png"
+            };
+
+            // Check if book exists
+            const booksRef = collection(db, 'books');
+            const q = query(booksRef, where('bookId', '==', bookId));
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+              // Update existing book
+              const docId = querySnapshot.docs[0].id;
+              await updateDoc(doc(db, 'books', docId), bookData);
+              updatedRows.push(`${title}`);
+            } else {
+              // Create new book
+              const newDocRef = doc(collection(db, 'books'));
+              await setDoc(newDocRef, bookData);
+              addedRows.push(`${title}`);
+            }
+          } catch (error) {
+            console.error(`Error processing row for ${title}:`, error);
+            errorRows.push(`${title} (${error.message})`);
+          }
+        }
+
+        closeModal('loadingModal');
+        isUploading = false;
+
+        let message = 'Upload Summary:\n';
+        if (addedRows.length > 0) {
+          message += `\nNewly Added Books:\n${addedRows.join('\n')}`;
+        }
+        if (updatedRows.length > 0) {
+          message += `\n\nUpdated Existing Books:\n${updatedRows.join('\n')}`;
+        }
+        if (errorRows.length > 0) {
+          message += `\n\nErrors:\n${errorRows.join('\n')}`;
+        }
+        alert(message);
+
+        closeModal('csvModal');
+        csvFile.value = '';
+        
+        // Refresh the books table
+        fetchBooks();
+      };
+
+      reader.readAsText(file);
+    });
+
+    // Add logout button click handler
+// ... existing code ...
+
+async function generateLibraryCard(book) {
+    // Update the library card template with book information
+    document.getElementById('cardBookId').textContent = book.id || 'N/A';
+    document.getElementById('cardBookTitle').textContent = book.title || 'N/A';
+    document.getElementById('cardAuthor').textContent = book.authors || 'N/A';
+    document.getElementById('cardISBN').textContent = book.isbn || 'N/A';
+    document.getElementById('cardPages').textContent = book.pages || 'N/A';
+
+    const cardElement = document.getElementById('libraryCardTemplate');
+    cardElement.style.display = 'block';
+
+    try {
+        // Convert the library card to canvas
+        const canvas = await html2canvas(cardElement, {
+            scale: 2,
+            backgroundColor: '#ffffff'
+        });
+
+        // Create PDF - using A4 size in landscape
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('l', 'mm', 'a4');
+        
+        // Add the canvas as image to PDF
+        const imgData = canvas.toDataURL('image/png');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+        // Download the PDF
+        pdf.save(`borrowing-record-${book.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`);
+
+        // Hide the template again
+        cardElement.style.display = 'none';
+        
+        showToast('success', 'Success', 'Borrowing record generated successfully!');
+    } catch (error) {
+        console.error('Error generating borrowing record:', error);
+        showToast('error', 'Error', 'Failed to generate borrowing record');
+    }
+}
+
+// Update the row creation to include the library card button
+function createBookRow(book) {
+    // ... existing code ...
+    const libraryCardBtn = row.querySelector('.btn-library-card');
+    if (libraryCardBtn) {
+        libraryCardBtn.addEventListener('click', () => generateLibraryCard(book));
+    }
+    // ... existing code ...
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Settings - E-Library</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <style>
+        body {
+            background-color: #f8fafc;
+        }
+
+        .settings-container {
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+        }
+
+        .settings-header {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .settings-section {
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .settings-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #1e293b;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            padding: 0.5rem 1rem;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .back-button:hover {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .form-control:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+        }
+    </style>
+</head>
+<body>
+    <a href="catalogstest.html" class="back-button">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Back to Library
+    </a>
+
+    <div class="settings-container">
+        <div class="settings-header">
+            <h2>User Settings</h2>
+        </div>
+
+        <div class="settings-section">
+            <h4 class="mb-3">Profile Information</h4>
+            <form id="profileForm">
+                <div class="mb-3">
+                    <label for="fullName" class="form-label">Full Name</label>
+                    <input type="text" class="form-control" id="fullName" readonly>
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" readonly>
+                </div>
+                <div class="mb-3">
+                    <label for="idNumber" class="form-label">ID Number</label>
+                    <input type="text" class="form-control" id="idNumber" readonly>
+                </div>
+                <div class="mb-3">
+                    <label for="role" class="form-label">Role</label>
+                    <input type="text" class="form-control" id="role" readonly>
+                </div>
+            </form>
+        </div>
+
+        <div class="settings-section">
+            <h4 class="mb-3">Change Password</h4>
+            <form id="passwordForm">
+                <div class="mb-3">
+                    <label for="currentPassword" class="form-label">Current Password</label>
+                    <input type="password" class="form-control" id="currentPassword" required>
+                </div>
+                <div class="mb-3">
+                    <label for="newPassword" class="form-label">New Password</label>
+                    <input type="password" class="form-control" id="newPassword" required>
+                </div>
+                <div class="mb-3">
+                    <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                    <input type="password" class="form-control" id="confirmPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Update Password</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+    <script>
+        // Initialize Firebase (use your config)
+        const firebaseConfig = {
+            // Your Firebase config here
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Show toast message function
+        function showToast(type, title, message) {
+            Toastify({
+                text: `${title}: ${message}`,
+                duration: 3000,
+                gravity: "top",
+                position: 'right',
+                backgroundColor: type === 'success' ? '#10b981' : '#ef4444',
+            }).showToast();
+        }
+
+        // Load user data
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                try {
+                    const facultyDoc = await db.collection('faculty').doc(user.uid).get();
+                    if (facultyDoc.exists) {
+                        const facultyData = facultyDoc.data();
+                        document.getElementById('fullName').value = facultyData.fullname || '';
+                        document.getElementById('email').value = facultyData.email || '';
+                        document.getElementById('idNumber').value = facultyData.idNumber || '';
+                        document.getElementById('role').value = facultyData.roles || '';
+                    }
+                } catch (error) {
+                    console.error('Error loading user data:', error);
+                    showToast('error', 'Error', 'Failed to load user data');
+                }
+            } else {
+                window.location.href = '/index.html';
+            }
+        });
+
+        // Handle password update
+        document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                showToast('error', 'Error', 'New passwords do not match');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                showToast('error', 'Error', 'New password must be at least 6 characters');
+                return;
+            }
+
+            try {
+                const user = auth.currentUser;
+                const credential = firebase.auth.EmailAuthProvider.credential(
+                    user.email,
+                    currentPassword
+                );
+
+                // Reauthenticate user
+                await user.reauthenticateWithCredential(credential);
+                
+                // Update password
+                await user.updatePassword(newPassword);
+                
+                // Clear form
+                document.getElementById('passwordForm').reset();
+                
+                showToast('success', 'Success', 'Password updated successfully');
+            } catch (error) {
+                console.error('Error updating password:', error);
+                let errorMessage = 'Failed to update password';
+                if (error.code === 'auth/wrong-password') {
+                    errorMessage = 'Current password is incorrect';
+                }
+                showToast('error', 'Error', errorMessage);
+            }
+        });
+    </script>
+</body>
+</html> 

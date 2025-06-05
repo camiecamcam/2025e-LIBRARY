@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>E-Library - All Books</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+    }
+
+    .sidebar {
+      height: 100vh;
+      background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 100%);
+      color: #fff;
+      padding: 1.5rem 1rem;
+      position: fixed;
+      width: 260px;
+      box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+    }
+
+    .sidebar h4 {
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      padding: 0.5rem 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .sidebar a {
+      color: #e2e8f0;
+      display: block;
+      padding: 0.875rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      margin-bottom: 0.5rem;
+      transition: all 0.3s ease;
+      font-weight: 500;
+    }
+
+    .sidebar a:hover, .sidebar .active {
+      background-color: rgba(255,255,255,0.1);
+      color: #fff;
+      transform: translateX(5px);
+    }
+
+    .main {
+      margin-left: 280px;
+      padding: 2rem 2.5rem;
+    }
+
+    .book-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 2rem;
+      padding: 1rem 0;
+    }
+
+    .book-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      border: 1px solid #e2e8f0;
+    }
+
+    .book-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+    }
+
+    .book-cover {
+      width: 100%;
+      height: 320px;
+      object-fit: cover;
+    }
+
+    .book-info {
+      padding: 1.5rem;
+    }
+
+    .book-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #0f172a;
+    }
+
+    .book-author {
+      color: #64748b;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+
+    .book-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #64748b;
+      font-size: 0.875rem;
+    }
+
+    .category-badge {
+      background: #f1f5f9;
+      color: #475569;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .filters {
+      background: white;
+      padding: 1rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      border: 1px solid #e2e8f0;
+    }
+
+    .search-box {
+      max-width: 400px;
+      position: relative;
+    }
+
+    .search-box i {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #64748b;
+    }
+
+    .search-input {
+      padding: 0.75rem 1rem 0.75rem 2.5rem;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      width: 100%;
+      font-size: 0.95rem;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .filter-select {
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      color: #475569;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <h4>📚 E-Library</h4>
+  <a href="test.html">Dashboard</a>
+  <a href="books.html" class="active">All Books</a>
+  <a href="#">Add Book</a>
+  <a href="#">Teachers</a>
+  <a href="#">Students</a>
+  <a href="#">OPAC</a>
+  <a href="re">Reports</a>
+  <a href="#">Categories</a>
+</div>
+
+<!-- Main Content -->
+<div class="main">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="m-0">All Books</h2>
+    <button class="btn btn-primary" onclick="location.href='#'">
+      <i class="bi bi-plus-lg"></i> Add New Book
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <div class="search-box">
+      <i class="bi bi-search"></i>
+      <input type="text" class="search-input" placeholder="Search books..." id="searchInput">
+    </div>
+    <div class="filter-row">
+      <select class="filter-select" id="categoryFilter">
+        <option value="">All Categories</option>
+        <option value="Fiction">Fiction</option>
+        <option value="Science">Science</option>
+        <option value="Education">Education</option>
+      </select>
+      <select class="filter-select" id="sortBy">
+        <option value="title">Sort by Title</option>
+        <option value="author">Sort by Author</option>
+        <option value="date">Sort by Date Added</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Book Grid -->
+  <div class="book-grid" id="bookGrid">
+    <!-- Books will be populated by JavaScript -->
+  </div>
+</div>
+
+<script>
+  // Extended book data
+  const books = [
+    {
+      title: "The Elements of Style",
+      author: "William Strunk Jr. & E.B. White",
+      category: "Education",
+      date: "May 20, 2025",
+      cover: "https://covers.openlibrary.org/b/id/8569183-M.jpg",
+      description: "A style guide for writing and formatting text"
+    },
+    {
+      title: "A Brief History of Time",
+      author: "Stephen Hawking",
+      category: "Science",
+      date: "May 15, 2025",
+      cover: "https://covers.openlibrary.org/b/id/8406786-M.jpg",
+      description: "An exploration of cosmology and physics"
+    },
+    {
+      title: "To Kill a Mockingbird",
+      author: "Harper Lee",
+      category: "Fiction",
+      date: "May 10, 2025",
+      cover: "https://covers.openlibrary.org/b/id/12000181-M.jpg",
+      description: "A classic novel about justice and racial inequality"
+    }
+  ];
+
+  // Function to render books
+  function renderBooks(booksToRender) {
+    const bookGrid = document.getElementById('bookGrid');
+    bookGrid.innerHTML = '';
+    
+    booksToRender.forEach(book => {
+      bookGrid.innerHTML += `
+        <div class="book-card">
+          <img src="${book.cover}" alt="${book.title}" class="book-cover">
+          <div class="book-info">
+            <div class="book-title">${book.title}</div>
+            <div class="book-author">by ${book.author}</div>
+            <div class="book-meta">
+              <span class="category-badge">${book.category}</span>
+              <span>${book.date}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  // Initial render
+  renderBooks(books);
+
+  // Search functionality
+  document.getElementById('searchInput').addEventListener('input', (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    const filteredBooks = books.filter(book => 
+      book.title.toLowerCase().includes(searchTerm) ||
+      book.author.toLowerCase().includes(searchTerm) ||
+      book.description.toLowerCase().includes(searchTerm)
+    );
+    renderBooks(filteredBooks);
+  });
+
+  // Category filter
+  document.getElementById('categoryFilter').addEventListener('change', (e) => {
+    const category = e.target.value;
+    const filteredBooks = category ? 
+      books.filter(book => book.category === category) : 
+      books;
+    renderBooks(filteredBooks);
+  });
+
+  // Sort functionality
+  document.getElementById('sortBy').addEventListener('change', (e) => {
+    const sortBy = e.target.value;
+    const sortedBooks = [...books].sort((a, b) => {
+      switch(sortBy) {
+        case 'title':
+          return a.title.localeCompare(b.title);
+        case 'author':
+          return a.author.localeCompare(b.author);
+        case 'date':
+          return new Date(b.date) - new Date(a.date);
+        default:
+          return 0;
+      }
+    });
+    renderBooks(sortedBooks);
+  });
+</script>
+
+</body>
+</html> 
